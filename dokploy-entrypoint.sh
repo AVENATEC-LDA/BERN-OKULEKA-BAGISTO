@@ -13,6 +13,12 @@ wait_for_mysql() {
         return 1
     fi
 
+    if [[ "$DB_HOST" == *"://"* ]]; then
+        log "ERROR: DB_HOST must be only the MySQL hostname, not a full connection URL."
+        log "ERROR: Use DB_HOST=your-mysql-service-host, DB_DATABASE=bagisto, DB_USERNAME=bagisto, and DB_PASSWORD=your-password."
+        return 1
+    fi
+
     export DB_PORT="${DB_PORT:-3306}"
     export DB_USERNAME="${DB_USERNAME:-bagisto}"
     export DB_PASSWORD="${DB_PASSWORD:-bagisto}"

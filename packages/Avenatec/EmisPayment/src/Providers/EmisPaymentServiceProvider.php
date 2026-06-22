@@ -11,6 +11,8 @@ class EmisPaymentServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(dirname(__DIR__).'/Config/payment-methods.php', 'payment_methods');
 
         $this->mergeConfigFrom(dirname(__DIR__).'/Config/system.php', 'core');
+
+        $this->mergeConfigFrom(dirname(__DIR__).'/Config/emis-payment.php', 'emis_payment');
     }
 
     public function boot(): void

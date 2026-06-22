@@ -40,6 +40,17 @@ class EmisPayment extends Payment
         return $this->getConfigData('sort_order') ?: parent::getSortOrder();
     }
 
+    public function getConfigData($field)
+    {
+        $adminValue = parent::getConfigData($field);
+
+        if ($adminValue !== null && $adminValue !== '') {
+            return $adminValue;
+        }
+
+        return config('emis_payment.'.$field);
+    }
+
     public function isAvailable()
     {
         return parent::isAvailable()

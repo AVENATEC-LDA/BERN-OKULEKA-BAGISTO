@@ -1,0 +1,10 @@
+{
+    "name": "webkul/unitel-money",
+    "description": "Unitel Money payment gateway for Bagisto",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Webkul\\UnitelMoney\\": "src/"
+        }
+    }
+}

@@ -81,10 +81,7 @@
             </div>
 
             <div class="text-sm font-normal">
-                @lang('admin::app.users.sessions.powered-by-description', [
-                    'bagisto' => '<a class="text-blue-600 hover:underline" href="https://bagisto.com/en/">Bagisto</a>',
-                    'webkul' => '<a class="text-blue-600 hover:underline" href="https://webkul.com/">Webkul</a>',
-                ])
+                COPYRIGHT © {{ date('Y') }} - BERN OKULEKA. CRIADO E DESENVOLVIDO PELA <a class="text-blue-600 hover:underline" href="https://avenatec.it.com" target="_blank" rel="noopener noreferrer">AVENATEC</a>
             </div>
         </div>
     </div>

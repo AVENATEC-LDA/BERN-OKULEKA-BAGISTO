@@ -1,5 +1,6 @@
 <?php
 
+use Avenatec\EmisPayment\Tests\EmisPaymentTestCase;
 use Webkul\Admin\Tests\AdminTestCase;
 use Webkul\Core\Tests\CoreTestCase;
 use Webkul\Customer\Tests\CustomerTestCase;
@@ -11,6 +12,7 @@ use Webkul\PayU\Tests\PayUTestCase;
 use Webkul\Razorpay\Tests\RazorpayTestCase;
 use Webkul\Shop\Tests\ShopTestCase;
 use Webkul\Stripe\Tests\StripeTestCase;
+use Webkul\UnitelMoney\Tests\UnitelMoneyTestCase;
 
 ini_set('memory_limit', '1024M');
 
@@ -26,6 +28,7 @@ ini_set('memory_limit', '1024M');
 */
 
 uses(AdminTestCase::class)->in('../packages/Webkul/Admin/tests');
+uses(EmisPaymentTestCase::class)->in('../packages/Avenatec/EmisPayment/tests');
 uses(CoreTestCase::class)->in('../packages/Webkul/Core/tests');
 uses(CustomerTestCase::class)->in('../packages/Webkul/Customer/tests');
 uses(DataGridTestCase::class)->in('../packages/Webkul/DataGrid/tests');
@@ -36,6 +39,7 @@ uses(PayUTestCase::class)->in('../packages/Webkul/PayU/tests');
 uses(RazorpayTestCase::class)->in('../packages/Webkul/Razorpay/tests');
 uses(ShopTestCase::class)->in('../packages/Webkul/Shop/tests');
 uses(StripeTestCase::class)->in('../packages/Webkul/Stripe/tests');
+uses(UnitelMoneyTestCase::class)->in('../packages/Webkul/UnitelMoney/tests');
 
 /*
 |--------------------------------------------------------------------------

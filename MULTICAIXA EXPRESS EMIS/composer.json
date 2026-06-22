@@ -1,0 +1,27 @@
+{
+    "name": "avenatec/emis-payment",
+    "description": "Gateway de pagamento EMIS GPO / Multicaixa Express para Bagisto",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "AVENATEC",
+            "email": "auxilionunesr7@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Avenatec\\EmisPayment\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Avenatec\\EmisPayment\\Providers\\EmisPaymentServiceProvider"
+            ]
+        }
+    }
+}

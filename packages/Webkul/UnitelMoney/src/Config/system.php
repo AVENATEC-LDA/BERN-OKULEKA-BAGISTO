@@ -1,0 +1,122 @@
+<?php
+
+return [
+    [
+        'key'    => 'sales.payment_methods.unitel_money',
+        'name'   => 'unitel_money::app.admin.system.name',
+        'info'   => 'unitel_money::app.admin.system.info',
+        'sort'   => 3,
+        'fields' => [
+            [
+                'name'          => 'active',
+                'title'         => 'unitel_money::app.admin.system.active',
+                'type'          => 'boolean',
+                'default_value' => false,
+                'channel_based' => true,
+            ],
+            [
+                'name'          => 'title',
+                'title'         => 'unitel_money::app.admin.system.title',
+                'type'          => 'text',
+                'default_value' => 'Unitel Money',
+                'channel_based' => true,
+                'locale_based'  => true,
+            ],
+            [
+                'name'          => 'description',
+                'title'         => 'unitel_money::app.admin.system.description',
+                'type'          => 'textarea',
+                'default_value' => 'Pay securely with Unitel Money.',
+                'channel_based' => true,
+                'locale_based'  => true,
+            ],
+            [
+                'name'          => 'image',
+                'title'         => 'admin::app.configuration.index.sales.payment-methods.logo',
+                'type'          => 'image',
+                'info'          => 'admin::app.configuration.index.sales.payment-methods.logo-information',
+                'depends'       => 'active:1',
+                'channel_based' => true,
+                'locale_based'  => false,
+                'validation'    => 'mimes:bmp,jpeg,jpg,png,webp',
+            ],
+            [
+                'name'          => 'sandbox',
+                'title'         => 'unitel_money::app.admin.system.sandbox',
+                'type'          => 'boolean',
+                'default_value' => true,
+            ],
+            [
+                'name'       => 'client_id',
+                'title'      => 'unitel_money::app.admin.system.client-id',
+                'type'       => 'text',
+                'validation' => 'required_if:active,1',
+            ],
+            [
+                'name'       => 'client_secret',
+                'title'      => 'unitel_money::app.admin.system.client-secret',
+                'type'       => 'password',
+                'validation' => 'required_if:active,1',
+            ],
+            [
+                'name'       => 'merchant_id',
+                'title'      => 'unitel_money::app.admin.system.merchant-id',
+                'type'       => 'text',
+                'validation' => 'required_if:active,1',
+            ],
+            [
+                'name'       => 'service_code',
+                'title'      => 'unitel_money::app.admin.system.service-code',
+                'type'       => 'text',
+                'validation' => 'required_if:active,1',
+            ],
+            [
+                'name'       => 'sandbox_base_url',
+                'title'      => 'unitel_money::app.admin.system.sandbox-base-url',
+                'type'       => 'text',
+                'validation' => 'url',
+            ],
+            [
+                'name'       => 'production_base_url',
+                'title'      => 'unitel_money::app.admin.system.production-base-url',
+                'type'       => 'text',
+                'validation' => 'url',
+            ],
+            [
+                'name'          => 'oauth_path',
+                'title'         => 'unitel_money::app.admin.system.oauth-path',
+                'type'          => 'text',
+                'default_value' => '/oauth2/token',
+            ],
+            [
+                'name'          => 'buy_goods_path',
+                'title'         => 'unitel_money::app.admin.system.buy-goods-path',
+                'type'          => 'text',
+                'default_value' => '/buyGoods_async',
+            ],
+            [
+                'name'          => 'query_status_path',
+                'title'         => 'unitel_money::app.admin.system.query-status-path',
+                'type'          => 'text',
+                'default_value' => '/queryTransactionStatus',
+            ],
+            [
+                'name'       => 'callback_secret',
+                'title'      => 'unitel_money::app.admin.system.callback-secret',
+                'type'       => 'password',
+                'validation' => 'required_if:active,1',
+            ],
+            [
+                'name'  => 'allowed_ips',
+                'title' => 'unitel_money::app.admin.system.allowed-ips',
+                'type'  => 'textarea',
+            ],
+            [
+                'name'          => 'sort',
+                'title'         => 'unitel_money::app.admin.system.sort',
+                'type'          => 'text',
+                'default_value' => 3,
+            ],
+        ],
+    ],
+];

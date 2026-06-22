@@ -6,6 +6,15 @@
     colors="true"
 >
     <testsuites>
+        <!-- EMIS Payment package testsuites. -->
+        <testsuite name="EMIS Payment Unit Test">
+            <directory suffix="Test.php">packages/Avenatec/EmisPayment/tests/Unit</directory>
+        </testsuite>
+
+        <testsuite name="EMIS Payment Feature Test">
+            <directory suffix="Test.php">packages/Avenatec/EmisPayment/tests/Feature</directory>
+        </testsuite>
+
         <!-- Admin package testsuites. -->
         <testsuite name="Admin Feature Test">
             <directory suffix="Test.php">packages/Webkul/Admin/tests/Feature</directory>
@@ -66,6 +75,15 @@
 
         <testsuite name="Stripe Feature Test">
             <directory suffix="Test.php">packages/Webkul/Stripe/tests/Feature</directory>
+        </testsuite>
+
+        <!-- Unitel Money package testsuites. -->
+        <testsuite name="Unitel Money Unit Test">
+            <directory suffix="Test.php">packages/Webkul/UnitelMoney/tests/Unit</directory>
+        </testsuite>
+
+        <testsuite name="Unitel Money Feature Test">
+            <directory suffix="Test.php">packages/Webkul/UnitelMoney/tests/Feature</directory>
         </testsuite>
     </testsuites>
 

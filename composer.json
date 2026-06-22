@@ -64,6 +64,8 @@
     },
     "autoload": {
         "psr-4": {
+            "Avenatec\\EmisPayment\\": "packages/Avenatec/EmisPayment/src",
+            "Avenatec\\EmisPayment\\": "packages/Avenatec/EmisPayment/src",
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/",
@@ -106,12 +108,15 @@
             "Webkul\\Stripe\\": "packages/Webkul/Stripe/src",
             "Webkul\\Tax\\": "packages/Webkul/Tax/src",
             "Webkul\\Theme\\": "packages/Webkul/Theme/src",
+            "Webkul\\UnitelMoney\\": "packages/Webkul/UnitelMoney/src",
             "Webkul\\User\\": "packages/Webkul/User/src"
         }
     },
     "autoload-dev": {
         "psr-4": {
             "Tests\\": "tests/",
+            "Avenatec\\EmisPayment\\Tests\\": "packages/Avenatec/EmisPayment/tests",
+            "Avenatec\\EmisPayment\\Tests\\": "packages/Avenatec/EmisPayment/tests",
             "Webkul\\Admin\\Tests\\": "packages/Webkul/Admin/tests",
             "Webkul\\Core\\Tests\\": "packages/Webkul/Core/tests",
             "Webkul\\Customer\\Tests\\": "packages/Webkul/Customer/tests",
@@ -122,7 +127,8 @@
             "Webkul\\PayU\\Tests\\": "packages/Webkul/PayU/tests",
             "Webkul\\Razorpay\\Tests\\": "packages/Webkul/Razorpay/tests",
             "Webkul\\Shop\\Tests\\": "packages/Webkul/Shop/tests",
-            "Webkul\\Stripe\\Tests\\": "packages/Webkul/Stripe/tests"
+            "Webkul\\Stripe\\Tests\\": "packages/Webkul/Stripe/tests",
+            "Webkul\\UnitelMoney\\Tests\\": "packages/Webkul/UnitelMoney/tests"
         }
     },
     "scripts": {

@@ -1,5 +1,6 @@
 <?php
 
+use Avenatec\EmisPayment\Providers\EmisPaymentServiceProvider;
 use App\Providers\AppServiceProvider;
 use Webkul\Admin\Providers\AdminServiceProvider;
 use Webkul\Attribute\Providers\AttributeServiceProvider;
@@ -41,6 +42,7 @@ use Webkul\SocialShare\Providers\SocialShareServiceProvider;
 use Webkul\Stripe\Providers\StripeServiceProvider;
 use Webkul\Tax\Providers\TaxServiceProvider;
 use Webkul\Theme\Providers\ThemeServiceProvider;
+use Webkul\UnitelMoney\Providers\UnitelMoneyServiceProvider;
 use Webkul\User\Providers\UserServiceProvider;
 
 return [
@@ -48,6 +50,7 @@ return [
      * Application service providers.
      */
     AppServiceProvider::class,
+    EmisPaymentServiceProvider::class,
 
     /**
      * Webkul's service providers.
@@ -92,5 +95,6 @@ return [
     StripeServiceProvider::class,
     TaxServiceProvider::class,
     ThemeServiceProvider::class,
+    UnitelMoneyServiceProvider::class,
     UserServiceProvider::class,
 ];

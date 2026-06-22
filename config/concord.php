@@ -49,6 +49,7 @@ return [
         Webkul\Stripe\Providers\ModuleServiceProvider::class,
         Webkul\Tax\Providers\ModuleServiceProvider::class,
         Webkul\Theme\Providers\ModuleServiceProvider::class,
+        Webkul\UnitelMoney\Providers\ModuleServiceProvider::class,
         Webkul\User\Providers\ModuleServiceProvider::class,
     ],
 ];

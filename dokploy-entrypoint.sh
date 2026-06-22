@@ -8,7 +8,11 @@ log() {
 }
 
 wait_for_mysql() {
-    export DB_HOST="${DB_HOST:-mysql}"
+    if [ -z "$DB_HOST" ]; then
+        log "ERROR: DB_HOST is required. Create a MySQL database in Dokploy and set DB_HOST to its internal hostname."
+        return 1
+    fi
+
     export DB_PORT="${DB_PORT:-3306}"
     export DB_USERNAME="${DB_USERNAME:-bagisto}"
     export DB_PASSWORD="${DB_PASSWORD:-bagisto}"
@@ -25,6 +29,29 @@ wait_for_mysql() {
     done
 
     log "ERROR: MySQL is not reachable after 90 seconds."
+    return 1
+}
+
+wait_for_redis() {
+    if [ -z "$REDIS_HOST" ]; then
+        log "ERROR: REDIS_HOST is required because Redis is enabled for cache, session, or queue."
+        return 1
+    fi
+
+    export REDIS_PORT="${REDIS_PORT:-6379}"
+
+    log "Waiting for Redis at ${REDIS_HOST}:${REDIS_PORT}..."
+
+    for i in $(seq 1 90); do
+        if php -r '$redis = new Redis(); $redis->connect(getenv("REDIS_HOST"), (int) getenv("REDIS_PORT"), 2.0); $password = getenv("REDIS_PASSWORD"); if ($password !== false && $password !== "") { $redis->auth($password); } exit($redis->ping() ? 0 : 1);' 2>/dev/null; then
+            log "Redis is reachable."
+            return 0
+        fi
+
+        sleep 1
+    done
+
+    log "ERROR: Redis is not reachable after 90 seconds."
     return 1
 }
 
@@ -52,6 +79,10 @@ if [ -z "$APP_KEY" ]; then
 fi
 
 wait_for_mysql
+
+if [ "${CACHE_STORE:-file}" = "redis" ] || [ "${SESSION_DRIVER:-file}" = "redis" ] || [ "${QUEUE_CONNECTION:-sync}" = "redis" ]; then
+    wait_for_redis
+fi
 
 php artisan package:discover --ansi --no-interaction
 php artisan storage:link --no-interaction 2>/dev/null || true

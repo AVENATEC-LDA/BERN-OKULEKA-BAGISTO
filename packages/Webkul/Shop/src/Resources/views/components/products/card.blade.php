@@ -140,51 +140,65 @@
                 {!! view_render_event('bagisto.shop.components.products.card.price.after') !!}
 
                 <!-- Product Actions Section -->
-                <div class="action-items flex items-center justify-between opacity-0 transition-all duration-300 ease-in-out group-hover:opacity-100 max-md:hidden">
+                <div class="action-items grid gap-2 opacity-0 transition-all duration-300 ease-in-out group-hover:opacity-100 max-md:hidden">
                     @if (core()->getConfigData('sales.checkout.shopping_cart.cart_page'))
                         {!! view_render_event('bagisto.shop.components.products.card.add_to_cart.before') !!}
 
-                        <button
-                            class="secondary-button w-full max-w-full p-2.5 text-sm font-medium max-sm:rounded-xl max-sm:p-2"
-                            :disabled="! product.is_saleable || isAddingToCart"
-                            @click="addToCart()"
-                        >
-                            @lang('shop::app.components.products.card.add-to-cart')
-                        </button>
+                        <div class="grid gap-2">
+                            <button
+                                class="secondary-button w-full max-w-full p-2.5 text-sm font-medium max-sm:rounded-xl max-sm:p-2"
+                                :disabled="! product.is_saleable || isAddingToCart || isBuyingNow"
+                                @click="addToCart()"
+                            >
+                                @lang('shop::app.components.products.card.add-to-cart')
+                            </button>
+
+                            @if (core()->getConfigData('catalog.products.storefront.buy_now_button_display'))
+                                <button
+                                    class="primary-button w-full max-w-full p-2.5 text-sm font-medium uppercase max-sm:rounded-xl max-sm:p-2"
+                                    :disabled="! product.is_saleable || isAddingToCart || isBuyingNow"
+                                    @click="buyNow()"
+                                >
+                                    @lang('shop::app.products.view.buy-now')
+                                </button>
+                            @endif
+                        </div>
 
                         {!! view_render_event('bagisto.shop.components.products.card.add_to_cart.after') !!}
                     @endif
 
-                    {!! view_render_event('bagisto.shop.components.products.card.wishlist_option.before') !!}
+                    <div class="flex items-center justify-between">
+                        {!! view_render_event('bagisto.shop.components.products.card.wishlist_option.before') !!}
 
-                    @if (core()->getConfigData('customer.settings.wishlist.wishlist_option'))
-                        <span
-                            class="cursor-pointer p-2.5 text-2xl max-sm:hidden"
-                            role="button"
-                            aria-label="@lang('shop::app.components.products.card.add-to-wishlist')"
-                            tabindex="0"
-                            :class="product.is_wishlist ? 'icon-heart-fill text-red-600' : 'icon-heart'"
-                            @click="addToWishlist()"
-                        >
-                        </span>
-                    @endif
+                        @if (core()->getConfigData('customer.settings.wishlist.wishlist_option'))
+                            <span
+                                class="cursor-pointer p-2.5 text-2xl max-sm:hidden"
+                                role="button"
+                                aria-label="@lang('shop::app.components.products.card.add-to-wishlist')"
+                                tabindex="0"
+                                :class="product.is_wishlist ? 'icon-heart-fill text-red-600' : 'icon-heart'"
+                                @click="addToWishlist()"
+                            >
+                            </span>
+                        @endif
 
-                    {!! view_render_event('bagisto.shop.components.products.card.wishlist_option.after') !!}
+                        {!! view_render_event('bagisto.shop.components.products.card.wishlist_option.after') !!}
 
-                    {!! view_render_event('bagisto.shop.components.products.card.compare_option.before') !!}
+                        {!! view_render_event('bagisto.shop.components.products.card.compare_option.before') !!}
 
-                    @if (core()->getConfigData('catalog.products.settings.compare_option'))
-                        <span
-                            class="icon-compare cursor-pointer p-2.5 text-2xl max-sm:hidden"
-                            role="button"
-                            aria-label="@lang('shop::app.components.products.card.add-to-compare')"
-                            tabindex="0"
-                            @click="addToCompare(product.id)"
-                        >
-                        </span>
-                    @endif
+                        @if (core()->getConfigData('catalog.products.settings.compare_option'))
+                            <span
+                                class="icon-compare cursor-pointer p-2.5 text-2xl max-sm:hidden"
+                                role="button"
+                                aria-label="@lang('shop::app.components.products.card.add-to-compare')"
+                                tabindex="0"
+                                @click="addToCompare(product.id)"
+                            >
+                            </span>
+                        @endif
 
-                    {!! view_render_event('bagisto.shop.components.products.card.compare_option.after') !!}
+                        {!! view_render_event('bagisto.shop.components.products.card.compare_option.after') !!}
+                    </div>
                 </div>
             </div>
         </div>
@@ -324,13 +338,25 @@
 
                     {!! view_render_event('bagisto.shop.components.products.card.add_to_cart.before') !!}
 
-                    <x-shop::button
-                        class="primary-button whitespace-nowrap px-8 py-2.5"
-                        :title="trans('shop::app.components.products.card.add-to-cart')"
-                        ::loading="isAddingToCart"
-                        ::disabled="! product.is_saleable || isAddingToCart"
-                        @click="addToCart()"
-                    />
+                    <div class="flex flex-wrap gap-2">
+                        <x-shop::button
+                            class="secondary-button whitespace-nowrap px-8 py-2.5"
+                            :title="trans('shop::app.components.products.card.add-to-cart')"
+                            ::loading="isAddingToCart"
+                            ::disabled="! product.is_saleable || isAddingToCart || isBuyingNow"
+                            @click="addToCart()"
+                        />
+
+                        @if (core()->getConfigData('catalog.products.storefront.buy_now_button_display'))
+                            <x-shop::button
+                                class="primary-button whitespace-nowrap px-8 py-2.5 uppercase"
+                                :title="trans('shop::app.products.view.buy-now')"
+                                ::loading="isBuyingNow"
+                                ::disabled="! product.is_saleable || isAddingToCart || isBuyingNow"
+                                @click="buyNow()"
+                            />
+                        @endif
+                    </div>
 
                     {!! view_render_event('bagisto.shop.components.products.card.add_to_cart.after') !!}
 
@@ -350,6 +376,8 @@
                     isCustomer: '{{ auth()->guard('customer')->check() }}',
 
                     isAddingToCart: false,
+
+                    isBuyingNow: false,
                 }
             },
 
@@ -453,6 +481,42 @@
                             }
 
                             this.isAddingToCart = false;
+                        });
+                },
+
+                buyNow() {
+                    this.isBuyingNow = true;
+
+                    this.$axios.post('{{ route("shop.api.checkout.cart.store") }}', {
+                            'quantity': 1,
+                            'product_id': this.product.id,
+                            'is_buy_now': 1,
+                        })
+                        .then(response => {
+                            if (response.data.redirect) {
+                                window.location.href = response.data.redirect;
+
+                                return;
+                            }
+
+                            if (response.data.message) {
+                                this.$emitter.emit('update-mini-cart', response.data.data);
+
+                                this.$emitter.emit('add-flash', { type: 'success', message: response.data.message });
+                            } else {
+                                this.$emitter.emit('add-flash', { type: 'warning', message: response.data.data.message });
+                            }
+
+                            this.isBuyingNow = false;
+                        })
+                        .catch(error => {
+                            this.$emitter.emit('add-flash', { type: 'error', message: error.response.data.message });
+
+                            if (error.response.data.redirect_uri) {
+                                window.location.href = error.response.data.redirect_uri;
+                            }
+
+                            this.isBuyingNow = false;
                         });
                 },
             },

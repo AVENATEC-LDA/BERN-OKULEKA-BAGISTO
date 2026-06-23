@@ -913,7 +913,7 @@ return [
             'add-to-wishlist' => 'Adicionar à Lista de Desejos',
             'additional-information' => 'Informações Adicionais',
             'already-in-compare' => 'Produto já adicionado à comparação.',
-            'buy-now' => 'Comprar Agora',
+            'buy-now' => 'COMPRAR AGORA',
             'compare' => 'Comparar',
             'description' => 'Descrição',
             'related-product-title' => 'Produtos Relacionados',

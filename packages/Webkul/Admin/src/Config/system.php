@@ -963,6 +963,7 @@ return [
                 'name' => 'buy_now_button_display',
                 'title' => 'admin::app.configuration.index.catalog.products.storefront.buy-now-button-display',
                 'type' => 'boolean',
+                'default' => '1',
             ],
         ],
     ], [

@@ -53,10 +53,17 @@ class EmisController extends Controller
                 'currency' => $order->order_currency_code,
             ]);
 
+            $webhookUrl = $this->emisPayment->getWebhookUrl();
+
+            Log::channel('single')->info('[EMIS][ETAPA_1] URL publica do webhook preparada.', [
+                'order_id'    => $order->id,
+                'webhook_url' => $webhookUrl,
+            ]);
+
             $frame = $this->emisPayment->requestFrameToken(
                 $order->id,
                 (float) $order->grand_total,
-                route('emis_payment.webhook')
+                $webhookUrl
             );
 
             $this->mergePaymentAdditional($order, [
@@ -145,22 +152,32 @@ class EmisController extends Controller
     {
         $rawBody = $request->getContent();
 
-        Log::channel('single')->info('[EMIS][ETAPA_4_WEBHOOK] POST recebido.', [
+        Log::channel('single')->info('[EMIS][ETAPA_4_WEBHOOK] Callback recebido.', [
             'ip'         => $request->ip(),
+            'method'     => $request->method(),
             'body_bruto' => $rawBody,
+            'query'      => $request->query(),
         ]);
 
-        $payload = json_decode($rawBody, true);
+        $payload = $this->extractWebhookPayload($request, $rawBody);
 
-        if (! is_array($payload) || json_last_error() !== JSON_ERROR_NONE) {
-            Log::channel('single')->error('[EMIS][ETAPA_4_WEBHOOK] JSON invalido.');
+        if ($payload === []) {
+            if ($request->isMethod('get')) {
+                Log::channel('single')->info('[EMIS][ETAPA_4_WEBHOOK] Endpoint publico confirmado sem payload.');
 
-            return response()->json(['ok' => false, 'error' => 'invalid_json'], 400);
+                return response()->json([
+                    'ok'      => true,
+                    'ready'   => true,
+                    'message' => 'EMIS webhook endpoint is public and listening.',
+                ]);
+            }
+
+            Log::channel('single')->error('[EMIS][ETAPA_4_WEBHOOK] Payload invalido ou vazio.');
+
+            return response()->json(['ok' => false, 'error' => 'invalid_payload'], 400);
         }
 
-        $merchantReference = $payload['merchantReferenceNumber']
-            ?? $payload['reference']['id']
-            ?? (is_string($payload['reference'] ?? null) ? $payload['reference'] : '');
+        $merchantReference = $this->extractMerchantReference($payload);
 
         if (! preg_match('/(\d+)$/', (string) $merchantReference, $matches)) {
             Log::channel('single')->error('[EMIS][ETAPA_4_WEBHOOK] Referencia invalida.', [
@@ -190,12 +207,13 @@ class EmisController extends Controller
             return response()->json(['ok' => false, 'error' => 'invalid_payment_method'], 400);
         }
 
-        $newStatus = $this->emisPayment->resolveOrderStatus((string) ($payload['status'] ?? ''));
+        $emisStatus = $this->extractPaymentStatus($payload);
+        $newStatus = $this->emisPayment->resolveOrderStatus($emisStatus);
 
         $this->mergePaymentAdditional($order, [
             'emis_webhook'        => $payload,
-            'emis_transaction_id' => $payload['id'] ?? null,
-            'emis_status'         => strtoupper((string) ($payload['status'] ?? '')),
+            'emis_transaction_id' => $payload['id'] ?? $payload['transactionId'] ?? $payload['transaction_id'] ?? null,
+            'emis_status'         => strtoupper($emisStatus),
         ]);
 
         if ($newStatus === 'processing') {
@@ -240,12 +258,12 @@ class EmisController extends Controller
 
             Log::channel('single')->warning('[EMIS][ETAPA_4_WEBHOOK] Pagamento cancelado ou rejeitado.', [
                 'order_id' => $orderId,
-                'status'   => $payload['status'] ?? null,
+                'status'   => $emisStatus,
             ]);
         } else {
             Log::channel('single')->warning('[EMIS][ETAPA_4_WEBHOOK] Status EMIS nao reconhecido.', [
                 'order_id' => $orderId,
-                'status'   => $payload['status'] ?? null,
+                'status'   => $emisStatus,
             ]);
         }
 
@@ -299,5 +317,54 @@ class EmisController extends Controller
         $order->payment->update([
             'additional' => array_filter(array_merge($order->payment->additional ?? [], $additional), fn ($value) => $value !== null),
         ]);
+    }
+
+    protected function extractWebhookPayload(Request $request, string $rawBody): array
+    {
+        if ($rawBody !== '') {
+            $json = json_decode($rawBody, true);
+
+            if (is_array($json) && json_last_error() === JSON_ERROR_NONE) {
+                return $json;
+            }
+        }
+
+        $payload = array_filter($request->request->all(), fn ($value) => $value !== null && $value !== '');
+
+        if ($payload !== []) {
+            return $payload;
+        }
+
+        return array_filter($request->query(), fn ($value) => $value !== null && $value !== '');
+    }
+
+    protected function extractMerchantReference(array $payload): string
+    {
+        $reference = $payload['merchantReferenceNumber']
+            ?? $payload['merchantReference']
+            ?? $payload['referenceNumber']
+            ?? $payload['reference']
+            ?? $payload['orderReference']
+            ?? null;
+
+        if (is_array($reference)) {
+            $reference = $reference['id']
+                ?? $reference['reference']
+                ?? $reference['number']
+                ?? '';
+        }
+
+        return (string) $reference;
+    }
+
+    protected function extractPaymentStatus(array $payload): string
+    {
+        return (string) (
+            $payload['status']
+            ?? $payload['paymentStatus']
+            ?? $payload['transactionStatus']
+            ?? $payload['result']
+            ?? ''
+        );
     }
 }

@@ -43,6 +43,12 @@ return [
                 'validation'    => 'mimes:bmp,jpeg,jpg,png,webp',
             ],
             [
+                'name' => 'callback_url',
+                'title' => 'Callback URL',
+                'type' => 'blade',
+                'path' => 'emis-payment::admin.system.callback-url',
+            ],
+            [
                 'name'       => 'reference_prefix',
                 'title'      => 'emis-payment::app.admin.system.reference-prefix',
                 'type'       => 'text',

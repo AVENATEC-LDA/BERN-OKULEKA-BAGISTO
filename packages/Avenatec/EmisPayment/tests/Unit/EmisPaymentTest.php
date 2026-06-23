@@ -27,7 +27,9 @@ it('maps emis statuses to bagisto order statuses', function (string $emisStatus,
     expect($payment->resolveOrderStatus($emisStatus))->toBe($orderStatus);
 })->with([
     ['ACCEPTED', 'processing'],
+    ['APPROVED', 'processing'],
     ['SUCCESS', 'processing'],
+    ['SUCCESSFUL', 'processing'],
     ['PAID', 'processing'],
     ['COMPLETED', 'processing'],
     ['REJECTED', 'canceled'],
@@ -54,4 +56,12 @@ it('returns the default multicaixa express checkout logo', function () {
     };
 
     expect($payment->getImage())->toContain('payment-methods/multicaixa-express.png');
+});
+
+it('generates the emis webhook url from app url', function () {
+    config(['app.url' => 'https://loja.bernokuleka.com']);
+
+    $payment = new EmisPayment;
+
+    expect($payment->getWebhookUrl())->toBe('https://loja.bernokuleka.com/emis-payment/webhook');
 });

@@ -105,6 +105,17 @@ class EmisPayment extends Payment
         return $body;
     }
 
+    public function getWebhookUrl(): string
+    {
+        $appUrl = rtrim((string) config('app.url'), '/');
+
+        if ($appUrl && ! str_contains($appUrl, 'CHANGE_ME')) {
+            return $appUrl.'/emis-payment/webhook';
+        }
+
+        return route('emis_payment.webhook');
+    }
+
     public function buildReference(int $orderId, ?string $prefix = null): string
     {
         $referencePrefix = $prefix ?? $this->getReferencePrefix();
@@ -129,7 +140,7 @@ class EmisPayment extends Payment
     {
         $status = strtoupper($emisStatus);
 
-        if (in_array($status, ['ACCEPTED', 'SUCCESS', 'PAID', 'COMPLETED'], true)) {
+        if (in_array($status, ['ACCEPTED', 'APPROVED', 'SUCCESS', 'SUCCESSFUL', 'PAID', 'COMPLETED'], true)) {
             return 'processing';
         }
 

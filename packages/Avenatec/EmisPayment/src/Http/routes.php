@@ -11,7 +11,7 @@ Route::group(['middleware' => ['web']], function () {
     Route::get('emis-payment/pay', [EmisController::class, 'pay'])
         ->name('emis_payment.pay');
 
-    Route::post('emis-payment/webhook', [EmisController::class, 'webhook'])
+    Route::match(['get', 'post', 'put'], 'emis-payment/webhook', [EmisController::class, 'webhook'])
         ->withoutMiddleware([VerifyCsrfToken::class])
         ->name('emis_payment.webhook');
 

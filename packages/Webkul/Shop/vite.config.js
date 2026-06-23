@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => {
             emptyOutDir: true,
             minify: "esbuild",
             cssCodeSplit: true,
+            chunkSizeWarningLimit: 1000,
             rollupOptions: {
                 output: {
                     manualChunks: {

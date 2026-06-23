@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => {
     return {
         build: {
             emptyOutDir: true,
+            chunkSizeWarningLimit: 1000,
         },
 
         envDir,

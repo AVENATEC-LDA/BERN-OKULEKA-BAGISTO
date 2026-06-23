@@ -11,6 +11,16 @@ export default defineConfig(({ mode }) => {
     return {
         build: {
             emptyOutDir: true,
+            chunkSizeWarningLimit: 1000,
+            rollupOptions: {
+                output: {
+                    manualChunks: {
+                        vue: ["vue"],
+                        veeValidate: ["vee-validate", "@vee-validate/rules", "@vee-validate/i18n"],
+                        vendor: ["axios", "mitt"],
+                    },
+                },
+            },
         },
 
         envDir,

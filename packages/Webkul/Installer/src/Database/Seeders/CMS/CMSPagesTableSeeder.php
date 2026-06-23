@@ -20,6 +20,8 @@ class CMSPagesTableSeeder extends Seeder
 
         DB::table('cms_page_translations')->delete();
 
+        DB::table('cms_page_channels')->delete();
+
         $defaultLocale = $parameters['default_locale'] ?? config('app.locale');
 
         DB::table('cms_pages')->insert([

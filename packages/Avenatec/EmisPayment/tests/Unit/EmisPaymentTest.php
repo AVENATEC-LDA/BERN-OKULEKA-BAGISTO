@@ -80,11 +80,11 @@ it('builds frame urls from tokens and complete urls', function () {
         public function getConfigData($field)
         {
             return $field === 'frame_host'
-                ? 'https://pagamentonline.emis.co.ao/online-payment-gateway/portal/frame?token='
+                ? 'https://pagamentonline.emis.co.ao/online-payment-gateway/webframe/frame?token='
                 : null;
         }
     };
 
-    expect($payment->buildFrameUrl('frame-token-123'))->toBe('https://pagamentonline.emis.co.ao/online-payment-gateway/portal/frame?token=frame-token-123')
+    expect($payment->buildFrameUrl('frame-token-123'))->toBe('https://pagamentonline.emis.co.ao/online-payment-gateway/webframe/frame?token=frame-token-123')
         ->and($payment->buildFrameUrl('https://emis.test/frame?id=abc'))->toBe('https://emis.test/frame?id=abc');
 });

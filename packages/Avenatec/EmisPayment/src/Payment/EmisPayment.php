@@ -11,7 +11,7 @@ class EmisPayment extends Payment
 {
     public const ENDPOINT_DEFAULT = 'https://pagamentonline.emis.co.ao/online-payment-gateway/portal/frameToken';
 
-    public const FRAME_HOST_DEFAULT = 'https://pagamentonline.emis.co.ao/online-payment-gateway/portal/frame?token=';
+    public const FRAME_HOST_DEFAULT = 'https://pagamentonline.emis.co.ao/online-payment-gateway/webframe/frame?token=';
 
     protected $code = 'emis_payment';
 

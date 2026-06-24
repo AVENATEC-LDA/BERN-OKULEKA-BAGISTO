@@ -9,5 +9,5 @@ return [
     'qrcode_mode'      => env('EMIS_PAYMENT_QRCODE_MODE', 'PAYMENT'),
     'card_mode'        => env('EMIS_PAYMENT_CARD_MODE', 'DISABLED'),
     'endpoint'         => env('EMIS_PAYMENT_ENDPOINT', 'https://pagamentonline.emis.co.ao/online-payment-gateway/portal/frameToken'),
-    'frame_host'       => env('EMIS_PAYMENT_FRAME_HOST', 'https://pagamentonline.emis.co.ao/online-payment-gateway/portal/frame?token='),
+    'frame_host'       => env('EMIS_PAYMENT_FRAME_HOST', 'https://pagamentonline.emis.co.ao/online-payment-gateway/webframe/frame?token='),
 ];

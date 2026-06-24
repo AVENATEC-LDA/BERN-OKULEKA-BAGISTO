@@ -359,7 +359,6 @@
             frame.addEventListener('load', function () {
                 scaleFrame();
                 loader.classList.add('gone');
-                pollOrderStatus();
             });
 
             window.setTimeout(function () {
@@ -417,7 +416,6 @@
             });
 
             scaleFrame();
-            pollOrderStatus();
         })();
     </script>
 </body>

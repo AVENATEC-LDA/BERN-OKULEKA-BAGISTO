@@ -19,13 +19,16 @@ class DynamicSmtpTransport extends AbstractTransport
         try {
             $transport->send($message->getOriginalMessage(), $message->getEnvelope());
         } catch (\Throwable $e) {
-            Log::error('Dynamic SMTP mail delivery failed.', [
+            $context = [
                 'host'       => $this->value('emails.configure.smtp.host', config('mail.mailers.smtp.host')),
                 'port'       => $this->value('emails.configure.smtp.port', config('mail.mailers.smtp.port')),
                 'encryption' => $this->value('emails.configure.smtp.encryption', config('mail.mailers.smtp.encryption')),
                 'username'   => $this->mask((string) $this->value('emails.configure.smtp.username', config('mail.mailers.smtp.username'))),
                 'error'      => $e->getMessage(),
-            ]);
+            ];
+
+            Log::error('Dynamic SMTP mail delivery failed.', $context);
+            Log::channel('stderr')->error('Dynamic SMTP mail delivery failed.', $context);
 
             throw $e;
         }

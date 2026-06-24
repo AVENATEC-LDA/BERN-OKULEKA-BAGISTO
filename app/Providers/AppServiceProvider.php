@@ -3,8 +3,11 @@
 namespace App\Providers;
 
 use Barryvdh\Debugbar\Facades\Debugbar;
+use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\ParallelTesting;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\ServiceProvider;
 
@@ -35,6 +38,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Queue::failing(function (JobFailed $event) {
+            Log::channel('stderr')->error('Queue job failed.', [
+                'connection' => $event->connectionName,
+                'queue'      => $event->job->getQueue(),
+                'job'        => $event->job->resolveName(),
+                'error'      => $event->exception->getMessage(),
+                'exception'  => get_class($event->exception),
+                'trace'      => $event->exception->getTraceAsString(),
+            ]);
+        });
+
         ParallelTesting::setUpTestDatabase(function (string $database, int $token) {
             Artisan::call('db:seed');
         });

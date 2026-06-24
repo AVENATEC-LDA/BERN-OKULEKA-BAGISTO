@@ -75,7 +75,7 @@ class EmisPayment extends Payment
             'terminal'    => (string) $this->getConfigData('terminal_id'),
         ];
 
-        Log::channel('single')->info('[EMIS][ETAPA_2] Payload enviado a EMIS.', [
+        $this->logEmis('info', '[EMIS][ETAPA_2] Payload enviado a EMIS.', [
             'payload'  => $this->maskPayload($payload),
             'endpoint' => $endpoint,
         ]);
@@ -87,15 +87,15 @@ class EmisPayment extends Payment
 
         $body = $response->json() ?: [];
 
-        Log::channel('single')->info('[EMIS][ETAPA_2] Resposta da EMIS.', [
+        $this->logEmis('info', '[EMIS][ETAPA_2] Resposta da EMIS.', [
             'http_code' => $response->status(),
             'body'      => $this->maskPayload($body),
         ]);
 
-        if (! $response->successful() || empty($body['id'])) {
+        if (! $response->successful() || $this->extractFrameToken($body) === '') {
             $message = $body['message'] ?? $body['error'] ?? 'Resposta invalida da EMIS';
 
-            Log::channel('single')->error('[EMIS][ETAPA_2] EMIS recusou token.', [
+            $this->logEmis('error', '[EMIS][ETAPA_2] EMIS recusou token.', [
                 'message' => $message,
             ]);
 
@@ -103,6 +103,43 @@ class EmisPayment extends Payment
         }
 
         return $body;
+    }
+
+    public function extractFrameToken(array $response): string
+    {
+        $frameToken = $response['id']
+            ?? $response['frameToken']
+            ?? $response['token']
+            ?? $response['frameId']
+            ?? $response['url']
+            ?? $response['frameUrl']
+            ?? $response['redirectUrl']
+            ?? '';
+
+        return trim((string) $frameToken);
+    }
+
+    public function buildFrameUrl(string $frameToken): string
+    {
+        $frameToken = trim($frameToken);
+
+        if (filter_var($frameToken, FILTER_VALIDATE_URL)) {
+            return $frameToken;
+        }
+
+        $frameHost = trim((string) ($this->getConfigData('frame_host') ?: self::FRAME_HOST_DEFAULT));
+
+        if (str_contains($frameHost, '{token}')) {
+            return str_replace('{token}', rawurlencode($frameToken), $frameHost);
+        }
+
+        if (str_ends_with($frameHost, '=') || str_ends_with($frameHost, '/')) {
+            return $frameHost.rawurlencode($frameToken);
+        }
+
+        $separator = str_contains($frameHost, '?') ? '&' : '?';
+
+        return $frameHost.$separator.'token='.rawurlencode($frameToken);
     }
 
     public function getWebhookUrl(): string
@@ -171,5 +208,11 @@ class EmisPayment extends Payment
         }
 
         return $payload;
+    }
+
+    protected function logEmis(string $level, string $message, array $context = []): void
+    {
+        Log::channel('single')->log($level, $message, $context);
+        Log::channel('stderr')->log($level, $message, $context);
     }
 }

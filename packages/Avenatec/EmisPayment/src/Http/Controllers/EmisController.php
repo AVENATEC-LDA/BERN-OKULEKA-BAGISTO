@@ -67,21 +67,26 @@ class EmisController extends Controller
                 $webhookUrl
             );
 
+            $frameId = $this->emisPayment->extractFrameToken($frame);
+            $frameUrl = $this->emisPayment->buildFrameUrl($frameId);
+
             $this->mergePaymentAdditional($order, [
                 'emis_reference'    => $this->emisPayment->buildReference($order->id),
-                'emis_frame_id'     => $this->emisPayment->mask((string) $frame['id']),
-                'emis_frame_token'  => Crypt::encryptString((string) $frame['id']),
+                'emis_frame_id'     => $this->emisPayment->mask($frameId),
+                'emis_frame_token'  => Crypt::encryptString($frameId),
+                'emis_frame_url'    => $frameUrl,
                 'emis_status'       => 'frame_token_created',
             ]);
 
             session([
-                'emis_frame_id' => $frame['id'],
+                'emis_frame_id' => $frameId,
                 'emis_order_id' => $order->id,
             ]);
 
             $this->logEmis('info', '[EMIS][ETAPA_1] Token obtido. Redirecionando para pagina de pagamento.', [
                 'order_id' => $order->id,
-                'frame_id' => $this->emisPayment->mask((string) $frame['id']),
+                'frame_id' => $this->emisPayment->mask($frameId),
+                'frame_url_host' => parse_url($frameUrl, PHP_URL_HOST),
             ]);
 
             return redirect()->route('emis_payment.pay', $order->id);
@@ -138,8 +143,7 @@ class EmisController extends Controller
             return redirect()->route('shop.checkout.onepage.success');
         }
 
-        $frameHost = $this->emisPayment->getConfigData('frame_host') ?: EmisPayment::FRAME_HOST_DEFAULT;
-        $iframeSrc = $frameHost.rawurlencode((string) $frameId);
+        $iframeSrc = $this->emisPayment->buildFrameUrl((string) $frameId);
         $statusUrl = route('emis_payment.status', $order->id);
         $successUrl = route('shop.checkout.onepage.success');
         $cancelUrl = route('shop.checkout.cart.index');

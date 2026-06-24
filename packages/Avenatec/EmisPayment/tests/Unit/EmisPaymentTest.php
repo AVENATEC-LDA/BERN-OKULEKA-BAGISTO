@@ -65,3 +65,26 @@ it('generates the emis webhook url from app url', function () {
 
     expect($payment->getWebhookUrl())->toBe('https://loja.bernokuleka.com/emis-payment/webhook');
 });
+
+it('extracts frame tokens from supported emis response fields', function () {
+    $payment = new EmisPayment;
+
+    expect($payment->extractFrameToken(['frameUrl' => 'https://emis.test/frame?id=abc']))->toBe('https://emis.test/frame?id=abc')
+        ->and($payment->extractFrameToken(['redirectUrl' => 'https://emis.test/pay/abc']))->toBe('https://emis.test/pay/abc')
+        ->and($payment->extractFrameToken(['id' => 'frame-token-123']))->toBe('frame-token-123');
+});
+
+it('builds frame urls from tokens and complete urls', function () {
+    $payment = new class extends EmisPayment
+    {
+        public function getConfigData($field)
+        {
+            return $field === 'frame_host'
+                ? 'https://pagamentonline.emis.co.ao/online-payment-gateway/portal/frame?token='
+                : null;
+        }
+    };
+
+    expect($payment->buildFrameUrl('frame-token-123'))->toBe('https://pagamentonline.emis.co.ao/online-payment-gateway/portal/frame?token=frame-token-123')
+        ->and($payment->buildFrameUrl('https://emis.test/frame?id=abc'))->toBe('https://emis.test/frame?id=abc');
+});

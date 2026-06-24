@@ -168,6 +168,22 @@
             line-height: 1.5;
         }
 
+        .emis-frame-fallback {
+            display: none;
+            color: #111827;
+            background: #f9fafb;
+            border: 0;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .emis-frame-fallback.show {
+            display: inline-flex;
+        }
+
         @media (max-width: 640px) {
             #emis-topbar {
                 padding: 0 12px;
@@ -201,7 +217,16 @@
         <div id="emis-frame-area">
             <div id="emis-loader">
                 <div class="emis-spinner"></div>
-                <p>A carregar pagamento seguro...</p>
+                <p id="emis-loader-message">A carregar pagamento seguro...</p>
+                <a
+                    id="emis-frame-fallback"
+                    href="{{ $iframeSrc }}"
+                    target="_blank"
+                    rel="noopener"
+                    class="emis-frame-fallback"
+                >
+                    Abrir pagamento
+                </a>
             </div>
 
             <div id="emis-status">
@@ -241,6 +266,8 @@
             var statusBox = document.getElementById('emis-status');
             var statusTitle = document.getElementById('emis-status-title');
             var statusMessage = document.getElementById('emis-status-message');
+            var loaderMessage = document.getElementById('emis-loader-message');
+            var frameFallback = document.getElementById('emis-frame-fallback');
 
             var EMIS_W = 480;
             var EMIS_H = 800;
@@ -334,6 +361,13 @@
                 loader.classList.add('gone');
                 pollOrderStatus();
             });
+
+            window.setTimeout(function () {
+                if (! loader.classList.contains('gone')) {
+                    loaderMessage.textContent = 'Nao foi possivel carregar o pagamento nesta janela.';
+                    frameFallback.classList.add('show');
+                }
+            }, 8000);
 
             window.addEventListener('message', function (event) {
                 if (event.origin.indexOf('pagamentonline.emis.co.ao') === -1 || processed) {

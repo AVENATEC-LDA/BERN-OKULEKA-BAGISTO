@@ -135,10 +135,26 @@
         #emis-status {
             display: none;
             z-index: 10;
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translate(-50%, -12px);
+            width: min(92%, 520px);
+            max-width: 520px;
+            border-radius: 12px;
+            padding: 12px 14px;
+            background: rgba(15, 23, 42, 0.95);
+            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
         #emis-status.show {
             display: flex;
+            opacity: 1;
+            transform: translate(-50%, 0);
         }
 
         .emis-spinner {
@@ -187,10 +203,17 @@
         @media (max-width: 640px) {
             #emis-topbar {
                 padding: 0 12px;
+                height: 52px;
             }
 
             .emis-summary {
                 display: none;
+            }
+
+            #emis-status {
+                top: 8px;
+                width: calc(100% - 16px);
+                padding: 10px 12px;
             }
         }
     </style>
@@ -238,7 +261,10 @@
                 <iframe
                     id="emis-frame"
                     src="{{ $iframeSrc }}"
-                    allow="payment"
+                    allow="payment; fullscreen"
+                    allowfullscreen="true"
+                    loading="eager"
+                    referrerpolicy="strict-origin-when-cross-origin"
                     title="Pagamento EMIS Multicaixa Express"
                 ></iframe>
             </div>
@@ -271,12 +297,13 @@
 
             var EMIS_W = 480;
             var EMIS_H = 800;
+            var fallbackShown = false;
 
             function scaleFrame() {
                 var topbarHeight = document.getElementById('emis-topbar').offsetHeight;
                 var footerHeight = document.getElementById('emis-footer').offsetHeight;
-                var availW = area.offsetWidth;
-                var availH = window.innerHeight - topbarHeight - footerHeight;
+                var availW = Math.max(320, area.offsetWidth);
+                var availH = Math.max(480, window.innerHeight - topbarHeight - footerHeight);
                 var scale = Math.min(availW / EMIS_W, availH / EMIS_H, 1);
 
                 frame.style.width = EMIS_W + 'px';
@@ -286,6 +313,16 @@
                 frame.style.left = Math.max(0, (availW - EMIS_W * scale) / 2) + 'px';
 
                 wrap.style.height = (EMIS_H * scale) + 'px';
+            }
+
+            function showFrameFallback(message) {
+                if (fallbackShown) {
+                    return;
+                }
+
+                fallbackShown = true;
+                loaderMessage.textContent = message;
+                frameFallback.classList.add('show');
             }
 
             function showResult(title, message, redirectUrl) {
@@ -355,16 +392,21 @@
             }
 
             window.addEventListener('resize', scaleFrame);
+            window.addEventListener('orientationchange', scaleFrame);
+            window.addEventListener('pageshow', scaleFrame);
 
             frame.addEventListener('load', function () {
                 scaleFrame();
                 loader.classList.add('gone');
             });
 
+            frame.addEventListener('error', function () {
+                showFrameFallback('Nao foi possivel carregar o pagamento nesta janela.');
+            });
+
             window.setTimeout(function () {
                 if (! loader.classList.contains('gone')) {
-                    loaderMessage.textContent = 'Nao foi possivel carregar o pagamento nesta janela.';
-                    frameFallback.classList.add('show');
+                    showFrameFallback('Nao foi possivel carregar o pagamento nesta janela.');
                 }
             }, 8000);
 

@@ -49,6 +49,8 @@ it('renders emis payment page with iframe when session has frame id', function (
     $response->assertSuccessful()
         ->assertSee('https://pagamentonline.emis.co.ao/online-payment-gateway/portal/frame?token=frame-token-123', false)
         ->assertSee(route('emis_payment.status', 1234), false)
+        ->assertSee('allowfullscreen="true"', false)
+        ->assertSee("window.addEventListener('orientationchange', scaleFrame);", false)
         ->assertDontSee("scaleFrame();\n            pollOrderStatus();", false);
 });
 

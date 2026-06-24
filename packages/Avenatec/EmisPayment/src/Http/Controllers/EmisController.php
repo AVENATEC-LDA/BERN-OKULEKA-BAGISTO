@@ -253,7 +253,7 @@ class EmisController extends Controller
             ]);
         } elseif ($newStatus === 'canceled') {
             if (! in_array($order->status, ['processing', 'completed'], true)) {
-                $this->orderRepository->update(['status' => 'canceled'], $orderId);
+                $this->orderRepository->cancel($order, true);
             }
 
             Log::channel('single')->warning('[EMIS][ETAPA_4_WEBHOOK] Pagamento cancelado ou rejeitado.', [

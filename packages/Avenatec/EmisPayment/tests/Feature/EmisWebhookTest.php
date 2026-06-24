@@ -46,7 +46,7 @@ it('updates a rejected emis webhook to canceled', function () {
 
     $this->mock(OrderRepository::class, function ($mock) use ($order) {
         $mock->shouldReceive('find')->with(1234)->andReturn($order);
-        $mock->shouldReceive('update')->once()->with(['status' => 'canceled'], 1234);
+        $mock->shouldReceive('cancel')->once()->with($order, true)->andReturnTrue();
     });
 
     $this->mock(InvoiceRepository::class);

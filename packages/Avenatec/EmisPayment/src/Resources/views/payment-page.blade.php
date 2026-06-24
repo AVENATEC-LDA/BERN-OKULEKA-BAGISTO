@@ -271,6 +271,7 @@
             var STATUS_URL = @json($statusUrl);
             var SUCCESS_URL = @json($successUrl);
             var CANCEL_URL = @json($cancelUrl);
+            var processed = false;
             var polling = false;
             var completed = false;
             var statusTimer = null;

@@ -51,7 +51,9 @@ it('renders emis payment page with iframe when session has frame id', function (
         ->assertSee(route('emis_payment.status', 1234), false)
         ->assertSee('allowfullscreen="true"', false)
         ->assertSee("window.addEventListener('orientationchange', scaleFrame);", false)
-        ->assertSee('var hasGatewayConfirmation = false;', false)
+        ->assertSee("var flowState = 'iframe';", false)
+        ->assertSee('var processed = false;', false)
+        ->assertDontSee('id="emis-loader"', false)
         ->assertDontSee("scaleFrame();\n            pollOrderStatus();", false);
 });
 

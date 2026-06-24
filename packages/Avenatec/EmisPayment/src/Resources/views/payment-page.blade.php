@@ -134,21 +134,27 @@
 
         #emis-status {
             display: none;
-            z-index: 10;
+            z-index: 6;
             position: absolute;
-            top: 12px;
+            top: 10px;
             left: 50%;
-            transform: translate(-50%, -12px);
-            width: min(92%, 520px);
-            max-width: 520px;
-            border-radius: 12px;
-            padding: 12px 14px;
-            background: rgba(15, 23, 42, 0.95);
-            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+            transform: translate(-50%, -10px);
+            width: min(92%, 460px);
+            max-width: 460px;
+            border-radius: 999px;
+            padding: 9px 12px;
+            background: rgba(255, 255, 255, 0.96);
+            color: #111827;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
             border: 1px solid rgba(148, 163, 184, 0.28);
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s ease, transform 0.2s ease;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            gap: 2px;
         }
 
         #emis-status.show {
@@ -173,15 +179,16 @@
         }
 
         #emis-status-title {
-            font-size: 20px;
+            font-size: 13px;
             font-weight: 700;
+            line-height: 1.3;
         }
 
         #emis-status-message {
             max-width: 380px;
-            color: #d1d5db;
-            font-size: 14px;
-            line-height: 1.5;
+            color: #4b5563;
+            font-size: 12px;
+            line-height: 1.4;
         }
 
         .emis-frame-fallback {
@@ -213,7 +220,7 @@
             #emis-status {
                 top: 8px;
                 width: calc(100% - 16px);
-                padding: 10px 12px;
+                padding: 8px 10px;
             }
         }
     </style>
@@ -284,6 +291,7 @@
             var polling = false;
             var completed = false;
             var statusTimer = null;
+            var hasGatewayConfirmation = false;
 
             var area = document.getElementById('emis-frame-area');
             var wrap = document.getElementById('emis-frame-wrap');
@@ -327,6 +335,10 @@
 
             function showResult(title, message, redirectUrl) {
                 if (completed) {
+                    return;
+                }
+
+                if (! hasGatewayConfirmation && ! redirectUrl) {
                     return;
                 }
 
@@ -416,6 +428,7 @@
                 }
 
                 processed = true;
+                hasGatewayConfirmation = true;
 
                 var data = event.data;
                 var status = 'PENDING_WEBHOOK';

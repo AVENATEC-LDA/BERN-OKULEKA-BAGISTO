@@ -226,9 +226,13 @@
 
     <script>
         (function () {
+            var STATUS_URL = @json($statusUrl);
             var SUCCESS_URL = @json($successUrl);
             var CANCEL_URL = @json($cancelUrl);
             var processed = false;
+            var polling = false;
+            var completed = false;
+            var statusTimer = null;
 
             var area = document.getElementById('emis-frame-area');
             var wrap = document.getElementById('emis-frame-wrap');
@@ -258,12 +262,68 @@
             }
 
             function showResult(title, message, redirectUrl) {
+                if (completed) {
+                    return;
+                }
+
                 statusTitle.textContent = title;
                 statusMessage.textContent = message;
                 statusBox.classList.add('show');
 
-                window.setTimeout(function () {
-                    window.location.href = redirectUrl;
+                if (redirectUrl) {
+                    completed = true;
+
+                    if (statusTimer) {
+                        window.clearInterval(statusTimer);
+                    }
+
+                    window.setTimeout(function () {
+                        window.location.href = redirectUrl;
+                    }, 3000);
+                }
+            }
+
+            function pollOrderStatus() {
+                if (polling) {
+                    return;
+                }
+
+                polling = true;
+
+                statusTimer = window.setInterval(function () {
+                    fetch(STATUS_URL, {
+                        headers: {
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'same-origin'
+                    })
+                        .then(function (response) {
+                            if (! response.ok) {
+                                throw new Error('status_unavailable');
+                            }
+
+                            return response.json();
+                        })
+                        .then(function (payload) {
+                            if (payload.order_status === 'processing' || payload.order_status === 'completed') {
+                                showResult(
+                                    'Pagamento confirmado',
+                                    'O pagamento foi confirmado com sucesso.',
+                                    SUCCESS_URL
+                                );
+
+                                return;
+                            }
+
+                            if (payload.order_status === 'canceled') {
+                                showResult(
+                                    'Pagamento nao aprovado',
+                                    'O pagamento nao foi aprovado. Pode tentar novamente.',
+                                    CANCEL_URL
+                                );
+                            }
+                        })
+                        .catch(function () {});
                 }, 3000);
             }
 
@@ -272,6 +332,7 @@
             frame.addEventListener('load', function () {
                 scaleFrame();
                 loader.classList.add('gone');
+                pollOrderStatus();
             });
 
             window.addEventListener('message', function (event) {
@@ -290,20 +351,24 @@
 
                 if (status === 'SUCCESS' || status === 'ACCEPTED') {
                     showResult(
-                        'Pagamento recebido',
-                        'A confirmacao final sera aplicada pelo servidor EMIS.',
-                        SUCCESS_URL
+                        'A verificar pagamento',
+                        'Estamos a aguardar a confirmacao segura da EMIS.',
+                        null
                     );
+
+                    pollOrderStatus();
 
                     return;
                 }
 
                 if (status === 'REJECTED' || status === 'FAILED') {
                     showResult(
-                        'Pagamento nao aprovado',
-                        'O pagamento nao foi aprovado. Pode tentar novamente.',
-                        CANCEL_URL
+                        'A verificar pagamento',
+                        'Estamos a aguardar a confirmacao final da EMIS.',
+                        null
                     );
+
+                    pollOrderStatus();
 
                     return;
                 }
@@ -311,11 +376,14 @@
                 showResult(
                     'A verificar pagamento',
                     'Estamos a aguardar a confirmacao segura da EMIS.',
-                    SUCCESS_URL
+                    null
                 );
+
+                pollOrderStatus();
             });
 
             scaleFrame();
+            pollOrderStatus();
         })();
     </script>
 </body>

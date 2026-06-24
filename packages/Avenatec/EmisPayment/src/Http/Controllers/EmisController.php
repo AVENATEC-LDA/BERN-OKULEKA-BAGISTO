@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Webkul\Checkout\Facades\Cart;
@@ -31,7 +32,7 @@ class EmisController extends Controller
         $cart = Cart::getCart();
 
         if (! $cart || $cart->payment?->method !== 'emis_payment') {
-            Log::channel('single')->error('[EMIS][ETAPA_1] Carrinho invalido para gateway EMIS.');
+            $this->logEmis('error', '[EMIS][ETAPA_1] Carrinho invalido para gateway EMIS.');
 
             session()->flash('error', trans('emis-payment::app.shop.invalid-session'));
 
@@ -47,7 +48,7 @@ class EmisController extends Controller
                 $order = $this->orderRepository->create((new OrderResource($cart))->jsonSerialize());
             }
 
-            Log::channel('single')->info('[EMIS][ETAPA_1] Checkout iniciado.', [
+            $this->logEmis('info', '[EMIS][ETAPA_1] Checkout iniciado.', [
                 'order_id' => $order->id,
                 'amount'   => $order->grand_total,
                 'currency' => $order->order_currency_code,
@@ -55,7 +56,7 @@ class EmisController extends Controller
 
             $webhookUrl = $this->emisPayment->getWebhookUrl();
 
-            Log::channel('single')->info('[EMIS][ETAPA_1] URL publica do webhook preparada.', [
+            $this->logEmis('info', '[EMIS][ETAPA_1] URL publica do webhook preparada.', [
                 'order_id'    => $order->id,
                 'webhook_url' => $webhookUrl,
             ]);
@@ -67,9 +68,10 @@ class EmisController extends Controller
             );
 
             $this->mergePaymentAdditional($order, [
-                'emis_reference' => $this->emisPayment->buildReference($order->id),
-                'emis_frame_id'  => $this->emisPayment->mask((string) $frame['id']),
-                'emis_status'    => 'frame_token_created',
+                'emis_reference'    => $this->emisPayment->buildReference($order->id),
+                'emis_frame_id'     => $this->emisPayment->mask((string) $frame['id']),
+                'emis_frame_token'  => Crypt::encryptString((string) $frame['id']),
+                'emis_status'       => 'frame_token_created',
             ]);
 
             session([
@@ -77,16 +79,16 @@ class EmisController extends Controller
                 'emis_order_id' => $order->id,
             ]);
 
-            Log::channel('single')->info('[EMIS][ETAPA_1] Token obtido. Redirecionando para pagina de pagamento.', [
+            $this->logEmis('info', '[EMIS][ETAPA_1] Token obtido. Redirecionando para pagina de pagamento.', [
                 'order_id' => $order->id,
                 'frame_id' => $this->emisPayment->mask((string) $frame['id']),
             ]);
 
-            return redirect()->route('emis_payment.pay');
+            return redirect()->route('emis_payment.pay', $order->id);
         } catch (\Throwable $e) {
             report($e);
 
-            Log::channel('single')->error('[EMIS][ETAPA_1] Erro ao iniciar pagamento.', [
+            $this->logEmis('error', '[EMIS][ETAPA_1] Erro ao iniciar pagamento.', [
                 'error' => $e->getMessage(),
             ]);
 
@@ -96,13 +98,13 @@ class EmisController extends Controller
         }
     }
 
-    public function pay(): RedirectResponse|View
+    public function pay(?int $orderId = null): RedirectResponse|View
     {
         $frameId = session('emis_frame_id');
-        $orderId = session('emis_order_id');
+        $orderId = $orderId ?: session('emis_order_id');
 
-        if (! $frameId || ! $orderId) {
-            Log::channel('single')->warning('[EMIS][ETAPA_3] Sessao de pagamento invalida ou expirada.');
+        if (! $orderId) {
+            $this->logEmis('warning', '[EMIS][ETAPA_3] Sessao de pagamento invalida ou expirada.');
 
             session()->flash('error', trans('emis-payment::app.shop.expired-session'));
 
@@ -117,6 +119,18 @@ class EmisController extends Controller
             return redirect()->route('shop.checkout.cart.index');
         }
 
+        $frameId = $frameId ?: $this->resolveFrameId($order);
+
+        if (! $frameId) {
+            $this->logEmis('warning', '[EMIS][ETAPA_3] Frame token ausente para pedido EMIS.', [
+                'order_id' => $orderId,
+            ]);
+
+            session()->flash('error', trans('emis-payment::app.shop.expired-session'));
+
+            return redirect()->route('shop.checkout.cart.index');
+        }
+
         if (in_array($order->status, ['processing', 'completed'], true)) {
             session()->forget(['emis_frame_id', 'emis_order_id']);
             session()->flash('order_id', $order->id);
@@ -126,19 +140,21 @@ class EmisController extends Controller
 
         $frameHost = $this->emisPayment->getConfigData('frame_host') ?: EmisPayment::FRAME_HOST_DEFAULT;
         $iframeSrc = $frameHost.rawurlencode((string) $frameId);
+        $statusUrl = route('emis_payment.status', $order->id);
         $successUrl = route('shop.checkout.onepage.success');
         $cancelUrl = route('shop.checkout.cart.index');
         $storeName = config('app.name', 'Loja Online');
         $logoUrl = core()->getCurrentChannel()->logo_url ?? '';
         $orderTotal = number_format((float) $order->grand_total, 2, '.', '').' '.$order->order_currency_code;
 
-        Log::channel('single')->info('[EMIS][ETAPA_3] Pagina de pagamento carregada.', [
+        $this->logEmis('info', '[EMIS][ETAPA_3] Pagina de pagamento carregada.', [
             'order_id' => $orderId,
             'frame_id' => $this->emisPayment->mask((string) $frameId),
         ]);
 
         return view('emis-payment::payment-page', compact(
             'iframeSrc',
+            'statusUrl',
             'successUrl',
             'cancelUrl',
             'storeName',
@@ -148,11 +164,35 @@ class EmisController extends Controller
         ));
     }
 
+    public function status(int $orderId): JsonResponse
+    {
+        $order = $this->findOrder($orderId);
+
+        if (! $order || $order->payment?->method !== 'emis_payment') {
+            return response()->json([
+                'ok'      => false,
+                'status'  => 'not_found',
+                'message' => trans('emis-payment::app.shop.order-not-found'),
+            ], 404);
+        }
+
+        if (in_array($order->status, ['processing', 'completed'], true)) {
+            session()->flash('order_id', $order->id);
+        }
+
+        return response()->json([
+            'ok'             => true,
+            'order_id'       => $order->id,
+            'order_status'   => $order->status,
+            'payment_status' => $order->payment->additional['emis_status'] ?? null,
+        ]);
+    }
+
     public function webhook(Request $request): JsonResponse
     {
         $rawBody = $request->getContent();
 
-        Log::channel('single')->info('[EMIS][ETAPA_4_WEBHOOK] Callback recebido.', [
+        $this->logEmis('info', '[EMIS][ETAPA_4_WEBHOOK] Callback recebido.', [
             'ip'         => $request->ip(),
             'method'     => $request->method(),
             'body_bruto' => $rawBody,
@@ -163,7 +203,7 @@ class EmisController extends Controller
 
         if ($payload === []) {
             if ($request->isMethod('get')) {
-                Log::channel('single')->info('[EMIS][ETAPA_4_WEBHOOK] Endpoint publico confirmado sem payload.');
+                $this->logEmis('info', '[EMIS][ETAPA_4_WEBHOOK] Endpoint publico confirmado sem payload.');
 
                 return response()->json([
                     'ok'      => true,
@@ -172,7 +212,7 @@ class EmisController extends Controller
                 ]);
             }
 
-            Log::channel('single')->error('[EMIS][ETAPA_4_WEBHOOK] Payload invalido ou vazio.');
+            $this->logEmis('error', '[EMIS][ETAPA_4_WEBHOOK] Payload invalido ou vazio.');
 
             return response()->json(['ok' => false, 'error' => 'invalid_payload'], 400);
         }
@@ -180,7 +220,7 @@ class EmisController extends Controller
         $merchantReference = $this->extractMerchantReference($payload);
 
         if (! preg_match('/(\d+)$/', (string) $merchantReference, $matches)) {
-            Log::channel('single')->error('[EMIS][ETAPA_4_WEBHOOK] Referencia invalida.', [
+            $this->logEmis('error', '[EMIS][ETAPA_4_WEBHOOK] Referencia invalida.', [
                 'merchant_reference' => $merchantReference,
             ]);
 
@@ -191,7 +231,7 @@ class EmisController extends Controller
         $order = $this->findOrder($orderId);
 
         if (! $order) {
-            Log::channel('single')->error('[EMIS][ETAPA_4_WEBHOOK] Pedido nao encontrado.', [
+            $this->logEmis('error', '[EMIS][ETAPA_4_WEBHOOK] Pedido nao encontrado.', [
                 'order_id' => $orderId,
             ]);
 
@@ -199,7 +239,7 @@ class EmisController extends Controller
         }
 
         if ($order->payment?->method !== 'emis_payment') {
-            Log::channel('single')->warning('[EMIS][ETAPA_4_WEBHOOK] Pedido nao pertence ao gateway EMIS.', [
+            $this->logEmis('warning', '[EMIS][ETAPA_4_WEBHOOK] Pedido nao pertence ao gateway EMIS.', [
                 'order_id' => $orderId,
                 'method'   => $order->payment?->method,
             ]);
@@ -218,7 +258,7 @@ class EmisController extends Controller
 
         if ($newStatus === 'processing') {
             if (in_array($order->status, ['processing', 'completed'], true)) {
-                Log::channel('single')->warning('[EMIS][ETAPA_4_WEBHOOK] Pedido ja estava pago. Ignorado.', [
+                $this->logEmis('warning', '[EMIS][ETAPA_4_WEBHOOK] Pedido ja estava pago. Ignorado.', [
                     'order_id' => $orderId,
                 ]);
 
@@ -248,7 +288,7 @@ class EmisController extends Controller
                 Cart::deActivateCart();
             }
 
-            Log::channel('single')->info('[EMIS][ETAPA_4_WEBHOOK] Pedido marcado como pago.', [
+            $this->logEmis('info', '[EMIS][ETAPA_4_WEBHOOK] Pedido marcado como pago.', [
                 'order_id' => $orderId,
             ]);
         } elseif ($newStatus === 'canceled') {
@@ -256,12 +296,12 @@ class EmisController extends Controller
                 $this->orderRepository->cancel($order, true);
             }
 
-            Log::channel('single')->warning('[EMIS][ETAPA_4_WEBHOOK] Pagamento cancelado ou rejeitado.', [
+            $this->logEmis('warning', '[EMIS][ETAPA_4_WEBHOOK] Pagamento cancelado ou rejeitado.', [
                 'order_id' => $orderId,
                 'status'   => $emisStatus,
             ]);
         } else {
-            Log::channel('single')->warning('[EMIS][ETAPA_4_WEBHOOK] Status EMIS nao reconhecido.', [
+            $this->logEmis('warning', '[EMIS][ETAPA_4_WEBHOOK] Status EMIS nao reconhecido.', [
                 'order_id' => $orderId,
                 'status'   => $emisStatus,
             ]);
@@ -272,7 +312,7 @@ class EmisController extends Controller
 
     public function test(Request $request): JsonResponse
     {
-        Log::channel('single')->info('[EMIS][DIAGNOSTICO] Endpoint /test chamado.', [
+        $this->logEmis('info', '[EMIS][DIAGNOSTICO] Endpoint /test chamado.', [
             'ip'     => $request->ip(),
             'method' => $request->method(),
         ]);
@@ -317,6 +357,29 @@ class EmisController extends Controller
         $order->payment->update([
             'additional' => array_filter(array_merge($order->payment->additional ?? [], $additional), fn ($value) => $value !== null),
         ]);
+    }
+
+    protected function resolveFrameId($order): ?string
+    {
+        $encryptedFrameToken = $order->payment->additional['emis_frame_token'] ?? null;
+
+        if (! $encryptedFrameToken) {
+            return null;
+        }
+
+        try {
+            return Crypt::decryptString($encryptedFrameToken);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return null;
+        }
+    }
+
+    protected function logEmis(string $level, string $message, array $context = []): void
+    {
+        Log::channel('single')->log($level, $message, $context);
+        Log::channel('stderr')->log($level, $message, $context);
     }
 
     protected function extractWebhookPayload(Request $request, string $rawBody): array

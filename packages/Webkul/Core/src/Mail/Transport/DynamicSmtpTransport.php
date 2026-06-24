@@ -24,11 +24,11 @@ class DynamicSmtpTransport extends AbstractTransport
      */
     protected function buildTransport(): EsmtpTransport
     {
-        $host = core()->getConfigData('emails.configure.smtp.host') ?? config('mail.mailers.smtp.host');
-        $port = core()->getConfigData('emails.configure.smtp.port') ?? config('mail.mailers.smtp.port');
-        $encryption = core()->getConfigData('emails.configure.smtp.encryption') ?? config('mail.mailers.smtp.encryption');
-        $username = core()->getConfigData('emails.configure.smtp.username') ?? config('mail.mailers.smtp.username');
-        $password = core()->getConfigData('emails.configure.smtp.password') ?? config('mail.mailers.smtp.password');
+        $host = $this->value('emails.configure.smtp.host', config('mail.mailers.smtp.host'));
+        $port = $this->value('emails.configure.smtp.port', config('mail.mailers.smtp.port'));
+        $encryption = $this->value('emails.configure.smtp.encryption', config('mail.mailers.smtp.encryption'));
+        $username = $this->value('emails.configure.smtp.username', config('mail.mailers.smtp.username'));
+        $password = $this->value('emails.configure.smtp.password', config('mail.mailers.smtp.password'));
 
         if (! $host) {
             throw new \RuntimeException(
@@ -47,6 +47,16 @@ class DynamicSmtpTransport extends AbstractTransport
         $transport->setPassword((string) $password);
 
         return $transport;
+    }
+
+    /**
+     * Read SMTP configuration from Bagisto, falling back when admin values are blank.
+     */
+    protected function value(string $key, mixed $fallback): mixed
+    {
+        $value = core()->getConfigData($key);
+
+        return $value !== null && $value !== '' ? $value : $fallback;
     }
 
     /**

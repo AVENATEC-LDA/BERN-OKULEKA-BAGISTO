@@ -72,6 +72,38 @@
             color: #d1d5db;
             font-size: 13px;
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 50%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .emis-summary.is-updating {
+            color: #f59e0b;
+            font-weight: 700;
+        }
+
+        .emis-summary .emis-state-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #f59e0b;
+            animation: emis-pulse 1.2s ease-in-out infinite;
+        }
+
+        @keyframes emis-pulse {
+            0%, 100% {
+                opacity: 0.4;
+                transform: scale(0.95);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
         }
 
         .emis-cancel {
@@ -112,65 +144,6 @@
             transform-origin: top left;
         }
 
-        #emis-status {
-            position: absolute;
-            inset: 0;
-            z-index: 5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 14px;
-            background: transparent;
-            text-align: center;
-            padding: 28px;
-            pointer-events: none;
-        }
-
-        #emis-status {
-            display: none;
-            z-index: 6;
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translate(-50%, -10px);
-            width: min(92%, 460px);
-            max-width: 460px;
-            border-radius: 999px;
-            padding: 9px 12px;
-            background: rgba(255, 255, 255, 0.96);
-            color: #111827;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-            border: 1px solid rgba(148, 163, 184, 0.28);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            text-align: center;
-            gap: 2px;
-        }
-
-        #emis-status.show {
-            display: flex;
-            opacity: 1;
-            transform: translate(-50%, 0);
-        }
-
-        #emis-status-title {
-            font-size: 13px;
-            font-weight: 700;
-            line-height: 1.3;
-        }
-
-        #emis-status-message {
-            max-width: 380px;
-            color: #4b5563;
-            font-size: 12px;
-            line-height: 1.4;
-        }
-
         .emis-frame-fallback {
             position: absolute;
             left: 50%;
@@ -202,13 +175,8 @@
             }
 
             .emis-summary {
-                display: none;
-            }
-
-            #emis-status {
-                top: 8px;
-                width: calc(100% - 16px);
-                padding: 8px 10px;
+                max-width: 100%;
+                font-size: 11px;
             }
         }
     </style>
@@ -225,19 +193,15 @@
                 @endif
             </div>
 
-            <div class="emis-summary">
-                Pedido #{{ $orderId }} - {{ $orderTotal }}
+            <div class="emis-summary" id="emis-summary" role="status" aria-live="polite">
+                <span class="emis-state-dot" aria-hidden="true"></span>
+                <span id="emis-summary-text">Pedido #{{ $orderId }} - {{ $orderTotal }}</span>
             </div>
 
             <a href="{{ $cancelUrl }}" class="emis-cancel">Cancelar</a>
         </div>
 
         <div id="emis-frame-area">
-            <div id="emis-status">
-                <div id="emis-status-title"></div>
-                <div id="emis-status-message"></div>
-            </div>
-
             <div id="emis-frame-wrap">
                 <iframe
                     id="emis-frame"
@@ -282,9 +246,8 @@
             var area = document.getElementById('emis-frame-area');
             var wrap = document.getElementById('emis-frame-wrap');
             var frame = document.getElementById('emis-frame');
-            var statusBox = document.getElementById('emis-status');
-            var statusTitle = document.getElementById('emis-status-title');
-            var statusMessage = document.getElementById('emis-status-message');
+            var summary = document.getElementById('emis-summary');
+            var summaryText = document.getElementById('emis-summary-text');
             var frameFallback = document.getElementById('emis-frame-fallback');
 
             var EMIS_W = 480;
@@ -317,6 +280,22 @@
                 frameFallback.classList.add('show');
             }
 
+            function updateSummary(message) {
+                if (summaryText) {
+                    summaryText.textContent = message;
+                }
+
+                if (summary) {
+                    summary.classList.add('is-updating');
+                }
+            }
+
+            function resetSummary() {
+                if (summary) {
+                    summary.classList.remove('is-updating');
+                }
+            }
+
             function showVerificationNotice(message) {
                 if (completed || flowState === 'redirecting') {
                     return;
@@ -324,10 +303,7 @@
 
                 hasGatewayConfirmation = true;
                 flowState = 'verifying';
-
-                statusTitle.textContent = 'A verificar pagamento';
-                statusMessage.textContent = message;
-                statusBox.classList.add('show');
+                updateSummary(message);
 
                 if (verificationTimer) {
                     window.clearTimeout(verificationTimer);
@@ -345,9 +321,7 @@
                     return;
                 }
 
-                statusTitle.textContent = title;
-                statusMessage.textContent = message;
-                statusBox.classList.add('show');
+                updateSummary(title);
 
                 if (redirectUrl) {
                     completed = true;

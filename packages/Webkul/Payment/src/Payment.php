@@ -76,6 +76,16 @@ class Payment
     {
         $paymentMethodClass = app(Config::get('payment_methods.'.$code.'.class'));
 
-        return $paymentMethodClass->getAdditionalDetails();
+        $details = $paymentMethodClass->getAdditionalDetails();
+
+        if (
+            ! empty($details)
+            && isset($details['description'])
+            && ! isset($details['value'])
+        ) {
+            $details['value'] = $details['description'];
+        }
+
+        return $details;
     }
 }

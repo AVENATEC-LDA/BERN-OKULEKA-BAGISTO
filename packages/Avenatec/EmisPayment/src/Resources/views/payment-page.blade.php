@@ -112,7 +112,6 @@
             transform-origin: top left;
         }
 
-        #emis-loader,
         #emis-status {
             position: absolute;
             inset: 0;
@@ -122,13 +121,9 @@
             justify-content: center;
             flex-direction: column;
             gap: 14px;
-            background: #111827;
+            background: transparent;
             text-align: center;
             padding: 28px;
-        }
-
-        #emis-loader.gone {
-            opacity: 0;
             pointer-events: none;
         }
 
@@ -163,21 +158,6 @@
             transform: translate(-50%, 0);
         }
 
-        .emis-spinner {
-            width: 36px;
-            height: 36px;
-            border: 3px solid #374151;
-            border-top-color: #38bdf8;
-            border-radius: 999px;
-            animation: emis-spin .8s linear infinite;
-        }
-
-        @keyframes emis-spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
         #emis-status-title {
             font-size: 13px;
             font-weight: 700;
@@ -192,15 +172,23 @@
         }
 
         .emis-frame-fallback {
+            position: absolute;
+            left: 50%;
+            bottom: 16px;
+            transform: translateX(-50%);
+            z-index: 6;
             display: none;
+            align-items: center;
+            justify-content: center;
             color: #111827;
             background: #f9fafb;
-            border: 0;
-            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            border-radius: 999px;
             padding: 10px 14px;
             font-size: 14px;
             font-weight: 700;
             text-decoration: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
         }
 
         .emis-frame-fallback.show {
@@ -245,20 +233,6 @@
         </div>
 
         <div id="emis-frame-area">
-            <div id="emis-loader">
-                <div class="emis-spinner"></div>
-                <p id="emis-loader-message">A carregar pagamento seguro...</p>
-                <a
-                    id="emis-frame-fallback"
-                    href="{{ $iframeSrc }}"
-                    target="_blank"
-                    rel="noopener"
-                    class="emis-frame-fallback"
-                >
-                    Abrir pagamento
-                </a>
-            </div>
-
             <div id="emis-status">
                 <div id="emis-status-title"></div>
                 <div id="emis-status-message"></div>
@@ -275,6 +249,16 @@
                     title="Pagamento EMIS Multicaixa Express"
                 ></iframe>
             </div>
+
+            <a
+                id="emis-frame-fallback"
+                href="{{ $iframeSrc }}"
+                target="_blank"
+                rel="noopener"
+                class="emis-frame-fallback"
+            >
+                Abrir pagamento
+            </a>
         </div>
 
         <div id="emis-footer">
@@ -287,20 +271,19 @@
             var STATUS_URL = @json($statusUrl);
             var SUCCESS_URL = @json($successUrl);
             var CANCEL_URL = @json($cancelUrl);
-            var processed = false;
             var polling = false;
             var completed = false;
             var statusTimer = null;
+            var verificationTimer = null;
             var hasGatewayConfirmation = false;
+            var flowState = 'iframe';
 
             var area = document.getElementById('emis-frame-area');
             var wrap = document.getElementById('emis-frame-wrap');
             var frame = document.getElementById('emis-frame');
-            var loader = document.getElementById('emis-loader');
             var statusBox = document.getElementById('emis-status');
             var statusTitle = document.getElementById('emis-status-title');
             var statusMessage = document.getElementById('emis-status-message');
-            var loaderMessage = document.getElementById('emis-loader-message');
             var frameFallback = document.getElementById('emis-frame-fallback');
 
             var EMIS_W = 480;
@@ -329,16 +312,35 @@
                 }
 
                 fallbackShown = true;
-                loaderMessage.textContent = message;
+                frameFallback.textContent = message;
                 frameFallback.classList.add('show');
             }
 
-            function showResult(title, message, redirectUrl) {
-                if (completed) {
+            function showVerificationNotice(message) {
+                if (completed || flowState === 'redirecting') {
                     return;
                 }
 
-                if (! hasGatewayConfirmation && ! redirectUrl) {
+                hasGatewayConfirmation = true;
+                flowState = 'verifying';
+
+                statusTitle.textContent = 'A verificar pagamento';
+                statusMessage.textContent = message;
+                statusBox.classList.add('show');
+
+                if (verificationTimer) {
+                    window.clearTimeout(verificationTimer);
+                }
+
+                verificationTimer = window.setTimeout(function () {
+                    if (flowState === 'verifying') {
+                        pollOrderStatus();
+                    }
+                }, 1500);
+            }
+
+            function showResult(title, message, redirectUrl) {
+                if (completed || flowState === 'iframe') {
                     return;
                 }
 
@@ -348,6 +350,7 @@
 
                 if (redirectUrl) {
                     completed = true;
+                    flowState = 'redirecting';
 
                     if (statusTimer) {
                         window.clearInterval(statusTimer);
@@ -355,12 +358,12 @@
 
                     window.setTimeout(function () {
                         window.location.href = redirectUrl;
-                    }, 3000);
+                    }, 2500);
                 }
             }
 
             function pollOrderStatus() {
-                if (polling) {
+                if (polling || flowState !== 'verifying') {
                     return;
                 }
 
@@ -409,18 +412,12 @@
 
             frame.addEventListener('load', function () {
                 scaleFrame();
-                loader.classList.add('gone');
+                frameFallback.classList.remove('show');
             });
 
             frame.addEventListener('error', function () {
                 showFrameFallback('Nao foi possivel carregar o pagamento nesta janela.');
             });
-
-            window.setTimeout(function () {
-                if (! loader.classList.contains('gone')) {
-                    showFrameFallback('Nao foi possivel carregar o pagamento nesta janela.');
-                }
-            }, 8000);
 
             window.addEventListener('message', function (event) {
                 if (event.origin.indexOf('pagamentonline.emis.co.ao') === -1 || processed) {
@@ -428,7 +425,6 @@
                 }
 
                 processed = true;
-                hasGatewayConfirmation = true;
 
                 var data = event.data;
                 var status = 'PENDING_WEBHOOK';
@@ -438,36 +434,18 @@
                 }
 
                 if (status === 'SUCCESS' || status === 'ACCEPTED') {
-                    showResult(
-                        'A verificar pagamento',
-                        'Estamos a aguardar a confirmacao segura da EMIS.',
-                        null
-                    );
-
-                    pollOrderStatus();
+                    showVerificationNotice('Estamos a aguardar a confirmacao segura da EMIS.');
 
                     return;
                 }
 
                 if (status === 'REJECTED' || status === 'FAILED') {
-                    showResult(
-                        'A verificar pagamento',
-                        'Estamos a aguardar a confirmacao final da EMIS.',
-                        null
-                    );
-
-                    pollOrderStatus();
+                    showVerificationNotice('Estamos a aguardar a confirmacao final da EMIS.');
 
                     return;
                 }
 
-                showResult(
-                    'A verificar pagamento',
-                    'Estamos a aguardar a confirmacao segura da EMIS.',
-                    null
-                );
-
-                pollOrderStatus();
+                showVerificationNotice('Estamos a aguardar a confirmacao segura da EMIS.');
             });
 
             scaleFrame();

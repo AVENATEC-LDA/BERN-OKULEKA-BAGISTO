@@ -25,7 +25,7 @@
             <template v-else>
                 {!! view_render_event('bagisto.shop.checkout.onepage.payment_method.accordion.before') !!}
 
-                <div v-if="selectedMethod && selectedMethod.payment === 'unitel_money' || selectedMethod && selectedMethod.method === 'unitel_money'" class="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+                <div v-if="selectedMethod && (selectedMethod.payment === 'unitel_money' || selectedMethod.method === 'unitel_money')" class="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
                     <label class="mb-2 block text-sm font-medium text-zinc-700" for="unitel-money-phone">Unitel phone number</label>
                     <input
                         id="unitel-money-phone"
@@ -156,9 +156,13 @@
                         const phone = this.unitelPhone.replace(/\D+/g, '');
 
                         if (! phone || phone.length < 9 || phone.length > 12) {
-                            window.alert('Please enter a valid Unitel phone number.');
+                            this.$nextTick(() => {
+                                const phoneInput = document.getElementById('unitel-money-phone');
 
-                            this.$emit('processing', 'payment');
+                                if (phoneInput) {
+                                    phoneInput.focus();
+                                }
+                            });
 
                             return;
                         }

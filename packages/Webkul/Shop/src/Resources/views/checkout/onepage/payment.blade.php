@@ -153,24 +153,21 @@
                     const paymentCode = selectedMethod.payment || selectedMethod.method;
 
                     if (paymentCode === 'unitel_money') {
-                        this.$nextTick(() => {
-                            const phoneInput = document.getElementById('unitel-money-phone');
-
-                            if (phoneInput) {
-                                phoneInput.focus();
-                            }
-                        });
-
-                        const phone = this.unitelPhone.replace(/\D+/g, '');
-
-                        if (! phone || phone.length < 9 || phone.length > 12) {
-                            return;
-                        }
+                        const phoneInput = document.getElementById('unitel-money-phone');
+                        const phone = (phoneInput?.value ?? this.unitelPhone).replace(/\D+/g, '');
 
                         this.unitelPhone = phone;
+
+                        if (! phone || phone.length < 9 || phone.length > 12) {
+                            this.$nextTick(() => {
+                                phoneInput?.focus();
+                            });
+
+                            return;
+                        }
                     }
 
-                    this.$emit('payment-method-selected', selectedMethod.method);
+                    this.$emit('payment-method-selected', paymentCode);
 
                     this.$emit('processing', 'review');
 

@@ -166,11 +166,6 @@
                         this.unitelPhone = phone;
                     }
 
-                        this.$emit('processing', 'payment');
-
-                        return;
-                    }
-
                     this.$emit('payment-method-selected', selectedMethod.method);
 
                     this.$emit('processing', 'review');
@@ -189,7 +184,7 @@
                         .then(response => {
                             this.$emit('processed', response.data.cart);
 
-                            // Used in mobile view. 
+                            // Used in mobile view.
                             if (window.innerWidth <= 768) {
                                 window.scrollTo({
                                     top: document.body.scrollHeight,

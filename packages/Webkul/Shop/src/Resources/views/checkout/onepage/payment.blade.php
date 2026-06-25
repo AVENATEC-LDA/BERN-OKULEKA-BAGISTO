@@ -36,10 +36,10 @@
                         inputmode="tel"
                         autocomplete="tel"
                         class="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-navyBlue focus:outline-none"
-                        placeholder="9xxxxxxxx"
+                        placeholder="946718952"
                     >
                     <p class="mt-2 text-xs text-zinc-500">
-                        Introduza apenas o número da carteira Unitel Money que deverá receber o pagamento.
+                        Exemplo de número válido: 946718952. Introduza apenas o número da carteira Unitel Money que deverá receber o pagamento.
                     </p>
                 </div>
 

@@ -189,8 +189,8 @@
                     }
 
                     this.$axios.post("{{ route('shop.checkout.onepage.payment_methods.store') }}", payload)
-                        .then(response => {
-                            this.$emit('processed', response.data.cart);
+                        .then(() => {
+                            this.$emit('processed', this.methods);
 
                             // Used in mobile view.
                             if (window.innerWidth <= 768) {

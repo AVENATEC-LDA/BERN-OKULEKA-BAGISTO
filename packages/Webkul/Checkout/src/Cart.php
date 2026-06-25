@@ -607,6 +607,14 @@ class Cart
         $cartPayment->method = $params['method'];
         $cartPayment->method_title = core()->getConfigData('sales.payment_methods.'.$params['method'].'.title');
         $cartPayment->cart_id = $this->cart->id;
+
+        $additional = [];
+
+        if (! empty($params['additional']) && is_array($params['additional'])) {
+            $additional = array_filter($params['additional'], fn ($value) => $value !== null && $value !== '');
+        }
+
+        $cartPayment->additional = $additional;
         $cartPayment->save();
 
         return $cartPayment;

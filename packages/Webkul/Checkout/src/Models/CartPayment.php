@@ -14,6 +14,10 @@ class CartPayment extends Model implements CartPaymentContract
 
     protected $table = 'cart_payment';
 
+    protected $casts = [
+        'additional' => 'array',
+    ];
+
     /**
      * Create a new factory instance for the model
      */

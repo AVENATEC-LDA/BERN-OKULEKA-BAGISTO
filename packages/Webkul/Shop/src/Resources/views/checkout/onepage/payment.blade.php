@@ -25,6 +25,19 @@
             <template v-else>
                 {!! view_render_event('bagisto.shop.checkout.onepage.payment_method.accordion.before') !!}
 
+                <div v-if="selectedMethod && selectedMethod.payment === 'unitel_money' || selectedMethod && selectedMethod.method === 'unitel_money'" class="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+                    <label class="mb-2 block text-sm font-medium text-zinc-700" for="unitel-money-phone">Unitel phone number</label>
+                    <input
+                        id="unitel-money-phone"
+                        v-model="unitelPhone"
+                        type="tel"
+                        inputmode="tel"
+                        autocomplete="tel"
+                        class="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-navyBlue focus:outline-none"
+                        placeholder="9xxxxxxxx"
+                    >
+                </div>
+
                 <!-- Accordion Blade Component -->
                 <x-shop::accordion class="overflow-hidden !border-b-0 max-md:rounded-lg max-md:!border-none max-md:!bg-gray-100">
                     <!-- Accordion Blade Component Header -->
@@ -126,15 +139,53 @@
 
             emits: ['payment-method-selected', 'processing', 'processed'],
 
+            data() {
+                return {
+                    selectedMethod: null,
+                    unitelPhone: '',
+                };
+            },
+
             methods: {
                 store(selectedMethod) {
+                    this.selectedMethod = selectedMethod;
+
+                    const paymentCode = selectedMethod.payment || selectedMethod.method;
+
+                    if (paymentCode === 'unitel_money') {
+                        const phone = this.unitelPhone.replace(/\D+/g, '');
+
+                        if (! phone || phone.length < 9 || phone.length > 12) {
+                            window.alert('Please enter a valid Unitel phone number.');
+
+                            this.$emit('processing', 'payment');
+
+                            return;
+                        }
+
+                        this.unitelPhone = phone;
+                    }
+
+                        this.$emit('processing', 'payment');
+
+                        return;
+                    }
+
                     this.$emit('payment-method-selected', selectedMethod.method);
 
                     this.$emit('processing', 'review');
 
-                    this.$axios.post("{{ route('shop.checkout.onepage.payment_methods.store') }}", {
-                            payment: selectedMethod
-                        })
+                    const payload = {
+                        payment: selectedMethod,
+                    };
+
+                    if (paymentCode === 'unitel_money') {
+                        payload.payment.additional = {
+                            unitel_money_phone: this.unitelPhone.replace(/\D+/g, ''),
+                        };
+                    }
+
+                    this.$axios.post("{{ route('shop.checkout.onepage.payment_methods.store') }}", payload)
                         .then(response => {
                             this.$emit('processed', response.data.cart);
 

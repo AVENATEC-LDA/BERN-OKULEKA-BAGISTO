@@ -38,6 +38,21 @@ it('maps homologated Unitel Money failure codes', function (string $code, string
     'msisdn failed'     => ['3015', 'msisdn_verification_failed', 'unitel_money_failed_msisdn'],
 ]);
 
+it('maps empty result codes as pending', function () {
+    $context = app(UnitelMoneyResultMapper::class)->map([
+        'Result' => [
+            'ResultCode' => '',
+            'ResultDesc' => 'Awaiting confirmation',
+        ],
+    ]);
+
+    expect($context['status_group'])->toBe('pending')
+        ->and($context['reason_key'])->toBe('payment_failed')
+        ->and($context['template_key'])->toBe('unitel_money_failed_generic')
+        ->and($context['order_status'])->toBe('pending')
+        ->and($context['invoice_state'])->toBeNull();
+});
+
 it('extracts identifiers from nested payloads', function () {
     $identifiers = app(UnitelMoneyResultMapper::class)->extractIdentifiers([
         'ResultBuyGoods' => [

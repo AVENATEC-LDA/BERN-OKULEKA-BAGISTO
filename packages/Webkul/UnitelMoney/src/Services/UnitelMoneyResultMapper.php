@@ -32,6 +32,19 @@ class UnitelMoneyResultMapper
             );
         }
 
+        if ($resultCode === '' || $resultCode === 'null') {
+            return $this->context(
+                node: $node,
+                resultCode: $resultCode,
+                resultDescription: $resultDescription,
+                reasonKey: 'payment_failed',
+                templateKey: 'unitel_money_failed_generic',
+                statusGroup: 'pending',
+                orderStatus: 'pending',
+                invoiceState: null
+            );
+        }
+
         [$reasonKey, $templateKey] = $this->failureMap[$resultCode] ?? ['payment_failed', 'unitel_money_failed_generic'];
 
         return $this->context(

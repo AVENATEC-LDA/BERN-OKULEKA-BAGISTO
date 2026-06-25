@@ -86,9 +86,42 @@ class UnitelMoneyApiClient
         return 'BAGISTO-'.$order->id.'-'.now()->format('YmdHis');
     }
 
+    public function resolvePhone(Cart $cart): ?string
+    {
+        $additionalPhone = $cart->payment?->additional['unitel_money_phone'] ?? null;
+
+        if (is_string($additionalPhone) && trim($additionalPhone) !== '') {
+            return $this->normalizePhone($additionalPhone);
+        }
+
+        if (is_array($additionalPhone)) {
+            $additionalPhone = $additionalPhone['value'] ?? null;
+
+            if (is_string($additionalPhone) && trim($additionalPhone) !== '') {
+                return $this->normalizePhone($additionalPhone);
+            }
+        }
+
+        return $this->normalizePhone((string) ($cart->billing_address?->phone ?? $cart->shipping_address?->phone));
+    }
+
+    public function isPhoneValid(?string $phone): bool
+    {
+        $normalized = $this->normalizePhone($phone);
+
+        return $normalized !== null && strlen($normalized) >= 9 && strlen($normalized) <= 12;
+    }
+
     protected function phone(Cart $cart): ?string
     {
-        return preg_replace('/\D+/', '', (string) ($cart->billing_address?->phone ?? $cart->shipping_address?->phone));
+        return $this->resolvePhone($cart);
+    }
+
+    protected function normalizePhone(?string $phone): ?string
+    {
+        $digits = preg_replace('/\D+/', '', (string) $phone);
+
+        return $digits !== '' ? $digits : null;
     }
 
     protected function http(): PendingRequest

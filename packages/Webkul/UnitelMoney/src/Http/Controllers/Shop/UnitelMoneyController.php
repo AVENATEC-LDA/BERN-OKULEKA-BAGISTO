@@ -61,6 +61,7 @@ class UnitelMoneyController extends Controller
                     ?? null,
                 'unitel_money_conversation_id' => $identifiers['conversation_id'] ?? null,
                 'unitel_money_status'          => 'initiated',
+                'unitel_money_phone'           => $this->apiClient->resolvePhone($cart),
             ]);
 
             $this->log('Payment initiated', 'initiated', $order->id, $cart->id, $result['response'], [
@@ -85,6 +86,7 @@ class UnitelMoneyController extends Controller
         }
 
         $payload = request()->json()->all() ?: request()->all();
+        $payload = is_array($payload) ? $payload : [];
         $context = $this->resultMapper->map($payload);
         $identifiers = $this->resultMapper->extractIdentifiers($payload);
 
@@ -105,12 +107,16 @@ class UnitelMoneyController extends Controller
         return response()->json(['status' => 'ok'], 200);
     }
 
-    public function queryStatus(int $orderId): RedirectResponse
+    public function queryStatus(int $orderId): RedirectResponse|JsonResponse
     {
         $order = $this->orderRepository->findOrFail($orderId);
         $originatorConversationId = $order->payment->additional['unitel_money_originator_conversation_id'] ?? null;
 
         if (! $originatorConversationId) {
+            if ($this->expectsJsonResponse()) {
+                return response()->json(['status' => 'error', 'message' => trans('unitel_money::app.messages.missing-reference')], 422);
+            }
+
             session()->flash('error', trans('unitel_money::app.messages.missing-reference'));
 
             return redirect()->back();
@@ -125,9 +131,22 @@ class UnitelMoneyController extends Controller
                 $this->applyPaymentResult($order, $context, $payload, $identifiers);
             }
 
+            if ($this->expectsJsonResponse()) {
+                return response()->json([
+                    'status' => 'ok',
+                    'message' => trans('unitel_money::app.messages.query-complete'),
+                    'order_status' => $order->fresh()->status,
+                    'redirect_url' => $order->fresh()->status === 'processing' ? route('shop.checkout.onepage.success') : null,
+                ]);
+            }
+
             session()->flash('success', trans('unitel_money::app.messages.query-complete'));
         } catch (\Throwable $e) {
             report($e);
+
+            if ($this->expectsJsonResponse()) {
+                return response()->json(['status' => 'error', 'message' => trans('unitel_money::app.messages.query-failed')], 500);
+            }
 
             session()->flash('error', trans('unitel_money::app.messages.query-failed'));
         }
@@ -273,5 +292,10 @@ class UnitelMoneyController extends Controller
         }
 
         return in_array(request()->ip(), array_map('trim', preg_split('/[\s,]+/', $allowedIps)), true);
+    }
+
+    protected function expectsJsonResponse(): bool
+    {
+        return request()->expectsJson() || request()->header('X-Requested-With') === 'XMLHttpRequest';
     }
 }

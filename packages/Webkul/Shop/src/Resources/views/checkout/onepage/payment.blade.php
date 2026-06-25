@@ -168,8 +168,6 @@
                                 phoneInput?.focus();
                             });
 
-                            this.$emit('processing', 'payment');
-
                             return;
                         }
                     }

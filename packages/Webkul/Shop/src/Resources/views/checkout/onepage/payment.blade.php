@@ -26,16 +26,21 @@
                 {!! view_render_event('bagisto.shop.checkout.onepage.payment_method.accordion.before') !!}
 
                 <div v-if="selectedMethod && (selectedMethod.payment === 'unitel_money' || selectedMethod.method === 'unitel_money')" class="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-                    <label class="mb-2 block text-sm font-medium text-zinc-700" for="unitel-money-phone">Unitel phone number</label>
+                    <label class="mb-2 block text-sm font-medium text-zinc-700" for="unitel-money-phone">
+                        Introduza o seu número activo no UNITEL MONEY que será cobrado
+                    </label>
                     <input
                         id="unitel-money-phone"
                         v-model="unitelPhone"
                         type="tel"
                         inputmode="tel"
                         autocomplete="tel"
-                        class="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-navyBlue focus:outline-none"
+                        class="mt-2 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-navyBlue focus:outline-none"
                         placeholder="9xxxxxxxx"
                     >
+                    <p class="mt-2 text-xs text-zinc-500">
+                        Introduza apenas o número da carteira Unitel Money que deverá receber o pagamento.
+                    </p>
                 </div>
 
                 <!-- Accordion Blade Component -->
@@ -162,6 +167,8 @@
                             this.$nextTick(() => {
                                 phoneInput?.focus();
                             });
+
+                            this.$emit('processing', 'payment');
 
                             return;
                         }

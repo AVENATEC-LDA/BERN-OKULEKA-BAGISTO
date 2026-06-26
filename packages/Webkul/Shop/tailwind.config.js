@@ -29,11 +29,16 @@ module.exports = {
 
         extend: {
             colors: {
-                navyBlue: "#060C3B",
+                navyBlue: "#561115",
                 lightOrange: "#F6F2EB",
                 darkGreen: '#40994A',
                 darkBlue: '#0044F2',
                 darkPink: '#F85156',
+                blue: {
+                    600: '#f7d9dc',
+                    700: '#f7d9dc',
+                    800: '#f7d9dc',
+                },
             },
 
             fontFamily: {

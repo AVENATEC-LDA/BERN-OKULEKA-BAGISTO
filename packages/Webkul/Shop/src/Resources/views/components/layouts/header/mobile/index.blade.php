@@ -294,6 +294,16 @@
 
                     {!! view_render_event('bagisto.shop.components.layouts.header.mobile.drawer.categories.before') !!}
 
+                    <div class="border-b border-zinc-200 px-4 py-3">
+                        <a
+                            href="{{ route('shop.all-products.index') }}"
+                            class="flex items-center justify-between text-base font-medium"
+                        >
+                            Visitar a Loja
+                            <i class="icon-double-arrow text-xl ltr:ml-2.5 rtl:mr-2.5"></i>
+                        </a>
+                    </div>
+
                     <!-- Mobile category view -->
                     <v-mobile-category ref="mobileCategory"></v-mobile-category>
 

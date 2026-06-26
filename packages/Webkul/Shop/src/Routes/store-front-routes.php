@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Webkul\Core\Http\Middleware\NoCacheMiddleware;
+use Webkul\Shop\Http\Controllers\AllProductsController;
 use Webkul\Shop\Http\Controllers\BookingProductController;
 use Webkul\Shop\Http\Controllers\CompareController;
 use Webkul\Shop\Http\Controllers\EUWithdrawalController;
@@ -46,6 +47,10 @@ Route::prefix('withdraw')->middleware([NoCacheMiddleware::class])->group(functio
  */
 Route::get('page/{slug}', [PageController::class, 'view'])
     ->name('shop.cms.page')
+    ->middleware('cache.response');
+
+Route::get('all-products', [AllProductsController::class, 'index'])
+    ->name('shop.all-products.index')
     ->middleware('cache.response');
 
 /**

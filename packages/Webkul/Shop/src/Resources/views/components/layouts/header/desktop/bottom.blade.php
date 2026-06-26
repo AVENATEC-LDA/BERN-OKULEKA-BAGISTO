@@ -355,6 +355,15 @@
                     </span>
                 </div>
 
+                <div class="flex h-[77px] items-center border-b-4 border-transparent hover:border-b-4 hover:border-navyBlue">
+                    <a
+                        href="{{ route('shop.all-products.index') }}"
+                        class="inline-block px-5 uppercase"
+                    >
+                        Visitar a Loja
+                    </a>
+                </div>
+
                 <!-- Show only first 4 categories in main navigation -->
                 <div
                     class="group relative flex h-[77px] items-center border-b-4 border-transparent hover:border-b-4 hover:border-navyBlue"

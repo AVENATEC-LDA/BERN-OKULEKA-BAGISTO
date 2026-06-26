@@ -1,6 +1,8 @@
 <?php
     $searchTitle = $suggestion ?? $query;
-    $title = $searchTitle ? trans('shop::app.search.title', ['query' => $searchTitle]) : trans('shop::app.search.results');
+    $title = $allProducts ?? false
+        ? 'Visitar a Loja'
+        : ($searchTitle ? trans('shop::app.search.title', ['query' => $searchTitle]) : trans('shop::app.search.results'));
     $searchInstead = $suggestion ? $query : null;
 ?>
 <!-- SEO Meta Content -->

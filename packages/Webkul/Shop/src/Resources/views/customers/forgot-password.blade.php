@@ -117,7 +117,7 @@
         </div>
 
         <p class="mb-4 mt-8 text-center text-xs text-zinc-500">
-            @lang('shop::app.customers.forgot-password.footer', ['current_year'=> date('Y') ])
+            COPYRIGHT © {{ date('Y') }} - BERN OKULEKA. CRIADO E DESENVOLVIDO PELA <a href="https://avenatec.it.com" target="_blank" rel="noopener noreferrer">AVENATEC</a>
         </p>
     </div>
 

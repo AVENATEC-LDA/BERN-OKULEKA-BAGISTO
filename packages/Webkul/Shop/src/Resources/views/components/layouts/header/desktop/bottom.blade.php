@@ -71,6 +71,7 @@
                 <input
                     type="text"
                     name="query"
+                    data-search-autocomplete="true"
                     value="{{ request('query') }}"
                     class="block w-full py-3 text-xs font-medium text-gray-900 transition-all border border-transparent rounded-lg bg-zinc-100 px-11 hover:border-gray-400 focus:border-gray-400"
                     minlength="{{ core()->getConfigData('catalog.products.search.min_query_length') }}"
@@ -81,6 +82,13 @@
                     pattern="[^\\]+"
                     required
                 >
+
+                <div
+                    class="absolute left-0 right-0 z-50 mt-1 hidden overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
+                    data-search-autocomplete-dropdown="desktop"
+                >
+                    <div class="grid gap-px bg-gray-200"></div>
+                </div>
 
                 <button
                     type="submit"
@@ -96,6 +104,111 @@
         </div>
 
         {!! view_render_event('bagisto.shop.components.layouts.header.desktop.bottom.search_bar.after') !!}
+
+        @pushOnce('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const API_URL = "{{ route('shop.api.products.index') }}";
+                    const MIN_QUERY_LENGTH = {{ core()->getConfigData('catalog.products.search.min_query_length') ?? 2 }};
+                    const MAX_SUGGESTIONS = 5;
+                    const DEBOUNCE_MS = 250;
+
+                    const debounce = (fn, delay) => {
+                        let timeout;
+                        return function (...args) {
+                            clearTimeout(timeout);
+                            timeout = setTimeout(() => fn.apply(this, args), delay);
+                        };
+                    };
+
+                    const PRODUCT_LINK_PLACEHOLDER = "{{ route('shop.product_or_category.index', 'SEARCH_HEADER_SLUG') }}";
+
+                    const buildItem = (product) => {
+                        const link = document.createElement('a');
+                        const imageUrl = product.base_image || '';
+
+                        link.href = PRODUCT_LINK_PLACEHOLDER.replace('SEARCH_HEADER_SLUG', encodeURIComponent(product.url_key));
+                        link.className = 'flex items-center gap-3 px-3 py-3 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100';
+                        link.innerHTML = `
+                            ${imageUrl ? `<img src="${imageUrl}" alt="${product.name}" class="h-10 w-10 rounded object-cover" />` : '<span class="inline-flex h-10 w-10 items-center justify-center rounded bg-gray-100 text-xs text-gray-500">?</span>'}
+                            <span class="truncate">${product.name}</span>
+                        `;
+
+                        return link;
+                    };
+
+                    const NO_RESULTS_TEXT = 'No results found';
+
+                    const createNoResults = () => {
+                        const noResults = document.createElement('div');
+                        noResults.className = 'px-3 py-3 text-sm text-gray-500';
+                        noResults.textContent = NO_RESULTS_TEXT;
+                        return noResults;
+                    };
+
+                    const updateDropdown = (dropdown, items) => {
+                        const list = dropdown.querySelector('div');
+                        list.innerHTML = '';
+
+                        if (!items.length) {
+                            list.appendChild(createNoResults());
+                            dropdown.classList.remove('hidden');
+                            return;
+                        }
+
+                        items.forEach((item) => {
+                            list.appendChild(buildItem(item));
+                        });
+
+                        dropdown.classList.remove('hidden');
+                    };
+
+                    const hideDropdown = (dropdown) => {
+                        dropdown.classList.add('hidden');
+                    };
+
+                    const fetchSuggestions = debounce((input, dropdown) => {
+                        const query = input.value.trim();
+
+                        if (query.length < MIN_QUERY_LENGTH) {
+                            return hideDropdown(dropdown);
+                        }
+
+                        axios.get(API_URL, {
+                            params: {
+                                query: query,
+                                suggest: 0,
+                                limit: MAX_SUGGESTIONS,
+                            },
+                        }).then((response) => {
+                            const products = response.data?.data || [];
+                            updateDropdown(dropdown, products);
+                        }).catch(() => {
+                            hideDropdown(dropdown);
+                        });
+                    }, DEBOUNCE_MS);
+
+                    document.querySelectorAll('input[data-search-autocomplete="true"]').forEach((input) => {
+                        const dropdown = input.closest('form')?.querySelector('[data-search-autocomplete-dropdown]');
+
+                        if (!dropdown) {
+                            return;
+                        }
+
+                        input.addEventListener('input', () => fetchSuggestions(input, dropdown));
+                        input.addEventListener('focus', () => {
+                            if (input.value.trim().length >= MIN_QUERY_LENGTH) {
+                                fetchSuggestions(input, dropdown);
+                            }
+                        });
+
+                        input.addEventListener('blur', () => {
+                            window.setTimeout(() => hideDropdown(dropdown), 150);
+                        });
+                    });
+                });
+            </script>
+        @endPushOnce
 
         <!-- Right Navigation Links -->
         <div class="mt-1.5 flex gap-x-8 max-[1100px]:gap-x-6 max-lg:gap-x-8">

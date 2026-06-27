@@ -217,12 +217,21 @@
 
             <input
                 type="text"
+                autocomplete="off"
+                data-search-autocomplete="true"
                 class="block w-full rounded-xl border border-['#E3E3E3'] px-11 py-3.5 text-sm font-medium text-gray-900 max-md:rounded-lg max-md:px-10 max-md:py-3 max-md:font-normal max-sm:text-xs"
                 name="query"
                 value="{{ request('query') }}"
                 placeholder="@lang('shop::app.components.layouts.header.mobile.search-text')"
                 required
             >
+
+            <div
+                class="absolute left-0 right-0 z-50 mt-1 hidden overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
+                data-search-autocomplete-dropdown="mobile"
+            >
+                <div class="grid gap-px bg-gray-200"></div>
+            </div>
 
             @if (core()->getConfigData('catalog.products.settings.image_search'))
                 @include('shop::search.images.index')

@@ -75,7 +75,7 @@ services:
             - xpack.security.enabled=false
             - discovery.type=single-node
             - bootstrap.memory_lock=true
-            - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+            - "ES_JAVA_OPTS=-Xms256m -Xmx256m -XX:-UseContainerSupport"
         ulimits:
             memlock:
                 soft: -1

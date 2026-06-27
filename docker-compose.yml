@@ -67,7 +67,7 @@ services:
             retries: 3
             timeout: 5s
     elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.20
         ports:
             - '9200:9200'
             - '9300:9300'
@@ -75,7 +75,8 @@ services:
             - xpack.security.enabled=false
             - discovery.type=single-node
             - bootstrap.memory_lock=true
-            - "ES_JAVA_OPTS=-Xms256m -Xmx256m -XX:-UseContainerSupport"
+            - "JAVA_TOOL_OPTIONS=-Djdk.management.cgroupv2.enabled=false -Djdk.internal.platform.cgroupv2.enabled=false -XX:-UseContainerSupport -XX:+IgnoreUnrecognizedVMOptions"
+            - "ES_JAVA_OPTS=-Xms256m -Xmx256m -Djdk.management.cgroupv2.enabled=false -Djdk.internal.platform.cgroupv2.enabled=false -XX:-UseContainerSupport -XX:+IgnoreUnrecognizedVMOptions"
         ulimits:
             memlock:
                 soft: -1

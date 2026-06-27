@@ -21,14 +21,15 @@ services:
       - "80"
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.20
     restart: unless-stopped
     environment:
       discovery.type: single-node
       xpack.security.enabled: "false"
       bootstrap.memory_lock: "false"
       ingest.geoip.downloader.enabled: "false"
-      ES_JAVA_OPTS: "-Xms512m -Xmx512m -XX:-UseContainerSupport"
+      JAVA_TOOL_OPTIONS: "-Djdk.management.cgroupv2.enabled=false -Djdk.internal.platform.cgroupv2.enabled=false -XX:-UseContainerSupport -XX:+IgnoreUnrecognizedVMOptions"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m -Djdk.management.cgroupv2.enabled=false -Djdk.internal.platform.cgroupv2.enabled=false -XX:-UseContainerSupport -XX:+IgnoreUnrecognizedVMOptions"
     ulimits:
       memlock:
         soft: -1

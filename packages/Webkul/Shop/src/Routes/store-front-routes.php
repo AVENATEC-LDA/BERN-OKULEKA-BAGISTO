@@ -49,7 +49,9 @@ Route::get('page/{slug}', [PageController::class, 'view'])
     ->name('shop.cms.page')
     ->middleware('cache.response');
 
-Route::get('all-products', [AllProductsController::class, 'index'])
+Route::redirect('all-products', 'loja', 301);
+
+Route::get('loja', [AllProductsController::class, 'index'])
     ->name('shop.all-products.index')
     ->middleware('cache.response');
 

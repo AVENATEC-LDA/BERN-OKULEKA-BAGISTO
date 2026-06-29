@@ -26,14 +26,6 @@
     <?php $productBaseImage = product_image()->getProductBaseImage($product); ?>
 
     <meta name="twitter:card" content="summary_large_image" />
-
-    <meta name="twitter:title" content="{{ $product->name }}" />
-
-    <meta name="twitter:description" content="{!! htmlspecialchars(trim(strip_tags($product->description))) !!}" />
-
-    <meta name="twitter:image:alt" content="" />
-
-    <meta name="twitter:image" content="{{ $productBaseImage['medium_image_url'] }}" />
 @endPush
 
 <!-- Page Layout -->

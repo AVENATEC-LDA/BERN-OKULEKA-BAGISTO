@@ -45,8 +45,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Escutar evento de renderização do layout e extrair dados em memória
-        Event::listen('bagisto.shop.layout.body.before', function ($viewRenderable) {
+        // Escutar evento de renderização do layout e extrair dados em memória antes de renderizar as metas do cabeçalho
+        Event::listen('bagisto.shop.layout.head.after', function ($viewRenderable) {
             try {
                 $data = $viewRenderable->getData();
             } catch (\Throwable $e) {

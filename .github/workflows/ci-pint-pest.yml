@@ -1,0 +1,50 @@
+name: CI — Pint, Pest, Build
+
+on:
+  push:
+    branches: [ main, master, feat/* ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo, pdo_mysql, curl, xml, zip
+
+      - name: Setup Composer Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+
+      - name: Install Composer Dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Composer Dump-Autoload
+        run: composer dump-autoload -o
+
+      - name: Run Pint (style check)
+        run: php vendor/bin/pint --test
+
+      - name: Run Pest (tests)
+        run: vendor/bin/pest --no-interaction
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install & Build Shop assets
+        working-directory: packages/Webkul/Shop
+        run: |
+          npm ci
+          npm run build

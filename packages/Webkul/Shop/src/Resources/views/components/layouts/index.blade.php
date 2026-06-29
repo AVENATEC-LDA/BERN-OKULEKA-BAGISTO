@@ -90,6 +90,9 @@
 
         {!! view_render_event('bagisto.shop.layout.head.after') !!}
 
+        {{-- Open Graph meta tags geradas em memória via OpenGraphService --}}
+        {!! app(\App\Services\OpenGraphService::class)->render() !!}
+
     </head>
 
     <body>

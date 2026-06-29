@@ -22,7 +22,7 @@ RUN cd packages/Webkul/Installer \
     && npm run build \
     && rm -rf node_modules
 
-RUN npm cache clean \
+RUN npm cache verify \
     && rm -rf /root/.npm /tmp/* /var/tmp/*
 
 

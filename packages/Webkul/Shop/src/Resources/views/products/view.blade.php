@@ -34,16 +34,6 @@
     <meta name="twitter:image:alt" content="" />
 
     <meta name="twitter:image" content="{{ $productBaseImage['medium_image_url'] }}" />
-
-    <meta property="og:type" content="og:product" />
-
-    <meta property="og:title" content="{{ $product->name }}" />
-
-    <meta property="og:image" content="{{ $productBaseImage['medium_image_url'] }}" />
-
-    <meta property="og:description" content="{!! htmlspecialchars(trim(strip_tags($product->description))) !!}" />
-
-    <meta property="og:url" content="{{ route('shop.product_or_category.index', $product->url_key) }}" />
 @endPush
 
 <!-- Page Layout -->

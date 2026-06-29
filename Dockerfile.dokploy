@@ -115,9 +115,12 @@ COPY dokploy-entrypoint.sh /usr/local/bin/dokploy-entrypoint.sh
 
 RUN chmod +x /usr/local/bin/dokploy-entrypoint.sh \
     && mkdir -p /run/php /var/log/supervisor /var/log/bagisto \
-    && chown -R www-data:www-data /var/www/bagisto \
+    && chown -R www-data:www-data /var/www/bagisto/storage /var/www/bagisto/bootstrap/cache /var/log/bagisto \
     && chmod -R 775 storage bootstrap/cache \
-    && find storage bootstrap/cache -type d -exec chmod g+s {} +
+    && find storage bootstrap/cache -type d -exec chmod g+s {} + \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /var/cache/* /tmp/* /var/tmp/* \
+    && df -h
 
 EXPOSE 80
 

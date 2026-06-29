@@ -29,3 +29,42 @@ docker-compose.override.yml
 npm-debug.log
 yarn-error.log
 *.log
+
+# Documentation files
+*.md
+!README.md
+
+# Test files
+**/tests
+**/test
+
+# Package management
+package.json
+package-lock.json
+composer.lock
+pint.json
+phpunit.xml
+
+# IDE and editor configs
+.editorconfig
+.php-cs-fixer.php
+tsconfig.json
+vite.config.js
+
+# Large assets that aren't needed
+**/*.webp
+**/*.jpg
+**/*.png
+**/*.gif
+**/*.ttf
+**/*.woff
+
+# Package source files
+packages/Webkul/*/src/Resources/assets/
+packages/Webkul/*/publishable/
+
+# Development files  
+logo para rebrand/
+MULTICAIXA EXPRESS EMIS/
+search-suggestion-v2.4.1/
+fix_composer.py

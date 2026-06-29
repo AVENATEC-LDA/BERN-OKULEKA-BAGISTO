@@ -1,0 +1,163 @@
+default:
+  tags:
+    - bagisto
+  image: webkul/bagisto:2.4.4
+  before_script:
+    - set -e
+
+    # Fix nginx IPv6 issue.
+    - sed -i 's/listen \[::\]:80.*;/#/g' /etc/nginx/conf.d/bagisto.conf
+
+    # Start services.
+    - /usr/bin/supervisord -c /etc/supervisor/supervisord.conf &
+    - sleep 10
+
+stages:
+  - base-test
+  - module-test
+
+# =========================
+# STAGE 1: BASE TEST
+# =========================
+"Base Test":
+  stage: base-test
+
+  script:
+    # Setup test.
+    - php -v
+    - cd /var/www/bagisto
+    - php artisan --version
+
+    # Health check.
+    - |
+      for i in {1..20}; do
+        STATUS=$(curl -o /dev/null -s -w "%{http_code}" http://127.0.0.1/up || true)
+        echo "Attempt $i: HTTP $STATUS."
+
+        if [ "$STATUS" = "200" ]; then
+          echo "✅ Base app is up."
+          exit 0
+        fi
+
+        sleep 2
+      done
+
+    - echo "❌ Base app failed."
+    - exit 1
+
+
+# =========================
+# STAGE 2: MODULE TEST
+# =========================
+"Module Test":
+  stage: module-test
+  needs:
+    - "Base Test"
+
+  script:
+    - cd /var/www/bagisto
+
+    # Copy Suggestion module into Bagisto.
+    - cp -r "$CI_PROJECT_DIR/packages/Webkul/Suggestion" packages/Webkul
+
+    # Update composer.json with PSR-4 path.
+    - |
+      sed -i 's/"Webkul\\\\DebugBar\\\\": "packages\/Webkul\/DebugBar\/src",/"Webkul\\\\DebugBar\\\\": "packages\/Webkul\/DebugBar\/src",\n        "Webkul\\\\Suggestion\\\\": "packages\/Webkul\/Suggestion\/src",/' composer.json
+
+    # Register service provider in bootstrap/providers.php.
+    - |
+      cat > /tmp/register_provider.php << 'PHPEOF'
+      <?php
+      $file = 'bootstrap/providers.php';
+      $content = file_get_contents($file);
+
+      // Add use statement after <?php
+      if (strpos($content, 'SuggestionServiceProvider') === false) {
+          $content = str_replace(
+              '<?php' . "\n",
+              '<?php' . "\n\nuse Webkul\\Suggestion\\Providers\\SuggestionServiceProvider;",
+              $content
+          );
+
+          // Add to return array
+          $content = str_replace(
+              'return [',
+              'return [' . "\n        SuggestionServiceProvider::class,",
+              $content
+          );
+
+          file_put_contents($file, $content);
+          echo "✓ Provider registered.\n";
+      }
+      PHPEOF
+      php /tmp/register_provider.php
+
+    # Laravel setup.
+    - composer dump-autoload
+    - php artisan search-suggestion:install
+    - php artisan optimize:clear
+
+    # Health check.
+    - |
+      HEALTH_OK=0
+      for i in {1..20}; do
+        STATUS=$(curl -o /dev/null -s -w "%{http_code}" http://127.0.0.1/up || true)
+        echo "Attempt $i: HTTP $STATUS."
+
+        if [ "$STATUS" = "200" ]; then
+          echo "✅ Module is working."
+          HEALTH_OK=1
+          break
+        fi
+
+        sleep 2
+      done
+
+      if [ "$HEALTH_OK" != "1" ]; then
+        echo "❌ Module broke the app."
+        exit 1
+      fi
+
+    # Install Node.js (image ships without it).
+    - |
+      if ! command -v node >/dev/null 2>&1; then
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        apt-get install -y nodejs
+      fi
+    - node -v
+    - npm -v
+
+    # Playwright test setup.
+    - cd packages/Webkul/Suggestion/tests/e2e-pw
+    - |
+      cat > .env <<EOF
+      BAGISTO_VERSION=2.4
+      BAGISTO_BASE_URL=http://127.0.0.1
+      BAGISTO_ADMIN_EMAIL=admin@example.com
+      BAGISTO_ADMIN_PASSWORD=admin123
+      ACTION_TIMEOUT=10000
+      NAVIGATION_TIMEOUT=15000
+      HEADED=false
+      EOF
+    - npm install
+    - npm run install:browsers
+
+    # Run Playwright tests.
+    - npx playwright test --reporter=list
+
+  after_script:
+    # Save test results and report.
+    - mkdir -p "$CI_PROJECT_DIR/playwright-test-results"
+    - |
+      RESULTS=/var/www/bagisto/packages/Webkul/Suggestion/tests/e2e-pw/test-results
+      REPORT=/var/www/bagisto/packages/Webkul/Suggestion/tests/e2e-pw/playwright-report
+      if [ -d "$RESULTS" ]; then cp -r "$RESULTS" "$CI_PROJECT_DIR/playwright-test-results/"; fi
+      if [ -d "$REPORT" ]; then cp -r "$REPORT" "$CI_PROJECT_DIR/playwright-test-results/"; fi
+    - cd "$CI_PROJECT_DIR" && tar -czf playwright-test-results.tar.gz playwright-test-results 2>/dev/null || true
+
+  artifacts:
+    when: always
+    paths:
+      - playwright-test-results/
+      - playwright-test-results.tar.gz
+    expire_in: 1 day

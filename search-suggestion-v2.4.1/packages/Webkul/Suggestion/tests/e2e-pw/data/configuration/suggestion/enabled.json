@@ -1,0 +1,7 @@
+{
+    "status": true,
+    "minSearchTerms": 2,
+    "productsLimit": 5,
+    "showSearchedTerms": true,
+    "showCategories": true
+}

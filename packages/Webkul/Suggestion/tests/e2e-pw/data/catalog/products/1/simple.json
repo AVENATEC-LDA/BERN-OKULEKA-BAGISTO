@@ -1,0 +1,9 @@
+{
+    "namePrefix": "SuggestionProd",
+    "shortDescription": "A simple product created by the suggestion e2e suite.",
+    "description": "Long description for the suggestion e2e simple product. Used for the storefront search dropdown verification.",
+    "price": "199.00",
+    "weight": "25",
+    "inventory": "5000",
+    "attributeFamilyId": "1"
+}

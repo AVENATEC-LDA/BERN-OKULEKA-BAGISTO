@@ -105,6 +105,7 @@
             "Webkul\\SocialLogin\\": "packages/Webkul/SocialLogin/src",
             "Webkul\\SocialShare\\": "packages/Webkul/SocialShare/src",
             "Webkul\\Stripe\\": "packages/Webkul/Stripe/src",
+            "Webkul\\Suggestion\\": "packages/Webkul/Suggestion/src",
             "Webkul\\Tax\\": "packages/Webkul/Tax/src",
             "Webkul\\Theme\\": "packages/Webkul/Theme/src",
             "Webkul\\UnitelMoney\\": "packages/Webkul/UnitelMoney/src",

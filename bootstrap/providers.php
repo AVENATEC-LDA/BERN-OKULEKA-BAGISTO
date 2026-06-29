@@ -40,6 +40,7 @@ use Webkul\Sitemap\Providers\SitemapServiceProvider;
 use Webkul\SocialLogin\Providers\SocialLoginServiceProvider;
 use Webkul\SocialShare\Providers\SocialShareServiceProvider;
 use Webkul\Stripe\Providers\StripeServiceProvider;
+use Webkul\Suggestion\Providers\SuggestionServiceProvider;
 use Webkul\Tax\Providers\TaxServiceProvider;
 use Webkul\Theme\Providers\ThemeServiceProvider;
 use Webkul\UnitelMoney\Providers\UnitelMoneyServiceProvider;
@@ -93,6 +94,7 @@ return [
     SocialLoginServiceProvider::class,
     SocialShareServiceProvider::class,
     StripeServiceProvider::class,
+    SuggestionServiceProvider::class,
     TaxServiceProvider::class,
     ThemeServiceProvider::class,
     UnitelMoneyServiceProvider::class,

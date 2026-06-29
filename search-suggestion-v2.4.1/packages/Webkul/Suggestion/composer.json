@@ -1,0 +1,26 @@
+{
+    "name": "bagisto/laravel-search-suggestion",
+    "license": "MIT",
+    "description": "Search Suggestion package for Bagisto storefront",
+    "authors": [
+        {
+            "name": "Bagisto",
+            "email": "support@bagisto.com"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Webkul\\Suggestion\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Webkul\\Suggestion\\Providers\\SuggestionServiceProvider"
+            ],
+            "aliases": {}
+        }
+    },
+    "minimum-stability": "dev"
+}

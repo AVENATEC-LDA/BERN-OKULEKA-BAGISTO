@@ -1,0 +1,9 @@
+{
+    "namePrefix": "SuggestionCat",
+    "position": "1",
+    "displayMode": "products_only",
+    "metaTitle": "Suggestion Category - SEO Title",
+    "metaKeywords": "suggestion, category",
+    "metaDescription": "Test category created by the suggestion e2e suite.",
+    "filterableAttributes": ["Price", "Color", "Size", "Brand"]
+}

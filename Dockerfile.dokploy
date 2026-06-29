@@ -8,21 +8,22 @@ WORKDIR /app
 COPY . .
 
 RUN cd packages/Webkul/Admin \
-    && npm ci --omit=optional --no-audit --no-fund \
+    && npm install --legacy-peer-deps --no-audit --no-fund --prefer-offline \
     && npm run build \
-    && rm -rf node_modules .npm
+    && rm -rf node_modules
 
 RUN cd packages/Webkul/Shop \
-    && npm ci --omit=optional --no-audit --no-fund \
+    && npm install --legacy-peer-deps --no-audit --no-fund --prefer-offline \
     && npm run build \
-    && rm -rf node_modules .npm
+    && rm -rf node_modules
 
 RUN cd packages/Webkul/Installer \
-    && npm ci --omit=optional --no-audit --no-fund \
+    && npm install --legacy-peer-deps --no-audit --no-fund --prefer-offline \
     && npm run build \
-    && rm -rf node_modules .npm
+    && rm -rf node_modules
 
-RUN rm -rf /root/.npm /root/.cache /root/.npm
+RUN npm cache clean --force \
+    && rm -rf /root/.npm /tmp/* /var/tmp/*
 
 
 FROM ubuntu:24.04

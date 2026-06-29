@@ -13,7 +13,7 @@ class EventServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen('bagisto.shop.layout.head.before', function ($event) {
-            $event->addTemplate('suggestion::components.layouts.style');
+            $event->addTemplate('suggestion::shop.components.layouts.style');
         });
     }
 }

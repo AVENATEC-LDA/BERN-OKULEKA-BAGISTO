@@ -65,18 +65,28 @@ class UnitelMoneyApiClient
     protected function buildBuyGoodsPayload(Cart $cart, Order $order): array
     {
         return [
-            'OriginatorConversationID' => $this->originatorConversationId($order),
-            'MerchantID'               => $this->config('merchant_id'),
-            'ServiceCode'              => $this->config('service_code'),
-            'Amount'                   => (string) round((float) $order->grand_total, 2),
-            'Currency'                 => $order->order_currency_code,
-            'MSISDN'                   => $this->phone($cart),
-            'CallBackURL'              => route('unitel-money.callback', ['token' => $this->config('callback_secret')]),
-            'ReferenceData'            => [
-                'ReferenceItem' => [
-                    'Key'   => 'cart_id',
-                    'Value' => (string) $cart->id,
+            'BuyGoodRec' => [
+                'TransactionRequest' => [
+                    'OriginatorConversationID' => $this->originatorConversationId($order),
+                    'MerchantID'               => $this->config('merchant_id'),
+                    'ServiceCode'              => $this->config('service_code'),
+                    'Amount'                   => (string) round((float) $order->grand_total, 2),
+                    'Currency'                 => $order->order_currency_code,
+                    'MSISDN'                   => $this->phone($cart),
+                    'CallBackURL'              => route('unitel-money.callback', ['token' => $this->config('callback_secret')]),
+                    'ReferenceData'            => [
+                        'ReferenceItem' => [
+                            'Key'   => 'cart_id',
+                            'Value' => (string) $cart->id,
+                        ],
+                    ],
                 ],
+            ],
+            'IdentityRec' => [
+                'InitiatorName'     => $this->config('initiator_name'),
+                'InitiatorPassword' => $this->config('initiator_password'),
+                'PartyID'           => $this->config('party_id'),
+                'PartyType'         => $this->config('party_type'),
             ],
         ];
     }

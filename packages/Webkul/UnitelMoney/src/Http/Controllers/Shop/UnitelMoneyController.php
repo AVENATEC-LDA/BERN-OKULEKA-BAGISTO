@@ -52,12 +52,13 @@ class UnitelMoneyController extends Controller
 
             $result = $this->apiClient->initiatePayment($cart, $order);
             $identifiers = $this->resultMapper->extractIdentifiers($result['response'] ?? []);
+            $requestIdentifiers = $this->resultMapper->extractIdentifiers($result['request'] ?? []);
 
             $this->mergePaymentAdditional($order, [
                 'unitel_money_request'                    => $this->apiClient->masked($result['request']),
                 'unitel_money_response'                   => $this->apiClient->masked($result['response']),
                 'unitel_money_originator_conversation_id' => $identifiers['originator_conversation_id']
-                    ?? $result['request']['OriginatorConversationID']
+                    ?? $requestIdentifiers['originator_conversation_id']
                     ?? null,
                 'unitel_money_conversation_id' => $identifiers['conversation_id'] ?? null,
                 'unitel_money_status'          => 'initiated',
@@ -65,7 +66,7 @@ class UnitelMoneyController extends Controller
             ]);
 
             $this->log('Payment initiated', 'initiated', $order->id, $cart->id, $result['response'], [
-                'originator_conversation_id' => $identifiers['originator_conversation_id'] ?? $result['request']['OriginatorConversationID'] ?? null,
+                'originator_conversation_id' => $identifiers['originator_conversation_id'] ?? $requestIdentifiers['originator_conversation_id'] ?? null,
                 'conversation_id'            => $identifiers['conversation_id'] ?? null,
             ]);
 

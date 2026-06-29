@@ -21,6 +21,12 @@ final class OpenGraphService
 
     private ?string $url = null;
 
+    /**
+     * Marca se valores explícitos (produto/página) foram atribuídos
+     * via `set()` — usado para suprimir metas de canal quando necessário.
+     */
+    private bool $hasExplicit = false;
+
     public function __construct()
     {
         $this->url = Request::fullUrl();
@@ -58,6 +64,11 @@ final class OpenGraphService
         if ($image !== null) {
             $this->image = strip_tags($image);
         }
+
+        // Marcar que houve atribuição explícita — usada para suprimir metas de fallback
+        if ($title !== null || $description !== null || $image !== null) {
+            $this->hasExplicit = true;
+        }
     }
 
     public function render(): string
@@ -69,16 +80,38 @@ final class OpenGraphService
 
         $html = [];
 
-        $html[] = "<meta property=\"og:type\" content=\"website\">";
-        $html[] = "<meta property=\"og:url\" content=\"{$url}\">";
-        $html[] = "<meta property=\"og:title\" content=\"{$title}\">";
-        $html[] = "<meta property=\"og:description\" content=\"{$description}\">";
+        // Expor fb:app_id se configurado
+        $fbAppId = config('opengraph.fb_app_id');
+        if (! empty($fbAppId)) {
+            $html[] = "<meta property=\"fb:app_id\" content=\"" . e($fbAppId) . "\">";
+        }
 
-        if (! empty($image)) {
-            $html[] = "<meta property=\"og:image\" content=\"{$image}\">";
+        // Se houver meta explícita, renderizamos como `product` (quando aplicável)
+        if ($this->hasExplicit) {
+            $html[] = "<meta property=\"og:type\" content=\"product\">";
+            $html[] = "<meta property=\"og:url\" content=\"{$url}\">";
+            $html[] = "<meta property=\"og:title\" content=\"{$title}\">";
+            $html[] = "<meta property=\"og:description\" content=\"{$description}\">";
+
+            if (! empty($image)) {
+                $html[] = "<meta property=\"og:image\" content=\"{$image}\">";
+            }
+        } else {
+            // Sem meta explícita: renderizar fallback de canal apenas se ativado
+            if (config('opengraph.render_fallback', true)) {
+                $html[] = "<meta property=\"og:type\" content=\"website\">";
+                $html[] = "<meta property=\"og:url\" content=\"{$url}\">";
+                $html[] = "<meta property=\"og:title\" content=\"{$title}\">";
+                $html[] = "<meta property=\"og:description\" content=\"{$description}\">";
+
+                if (! empty($image)) {
+                    $html[] = "<meta property=\"og:image\" content=\"{$image}\">";
+                }
+            }
         }
 
         // Twitter cards
+        // Twitter cards: sempre renderizamos a versão do que definimos acima
         $html[] = "<meta name=\"twitter:card\" content=\"summary_large_image\">";
         $html[] = "<meta name=\"twitter:url\" content=\"{$url}\">";
         $html[] = "<meta name=\"twitter:title\" content=\"{$title}\">";

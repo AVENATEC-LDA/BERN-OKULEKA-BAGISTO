@@ -2,6 +2,7 @@
 
 namespace Webkul\Shop\Http\Controllers;
 
+use App\Services\OpenGraphService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Webkul\Category\Repositories\CategoryRepository;
@@ -54,6 +55,12 @@ class ProductsCategoriesProxyController extends Controller
         $category = $this->categoryRepository->findBySlug($slugOrURLKey);
 
         if ($category) {
+            app(OpenGraphService::class)->set(
+                $category->meta_title ?: $category->name,
+                $category->meta_description ?: $category->description,
+                $category->image_url ?: $category->image
+            );
+
             return view('shop::categories.view', [
                 'category' => $category,
                 'params' => [
@@ -90,6 +97,12 @@ class ProductsCategoriesProxyController extends Controller
             if ($productURLRewrite) {
                 return redirect()->to($productURLRewrite->target_path, $productURLRewrite->redirect_type);
             }
+
+            app(OpenGraphService::class)->set(
+                $product->meta_title ?: $product->name,
+                $product->meta_description ?: $product->description,
+                $product->base_image_url ?: $product->image_url
+            );
 
             return view('shop::products.view', compact('product'));
         }

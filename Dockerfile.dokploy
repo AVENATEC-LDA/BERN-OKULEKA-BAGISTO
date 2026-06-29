@@ -8,16 +8,21 @@ WORKDIR /app
 COPY . .
 
 RUN cd packages/Webkul/Admin \
-    && npm install --no-audit --no-fund \
-    && npm run build
+    && npm ci --omit=optional --no-audit --no-fund \
+    && npm run build \
+    && rm -rf node_modules .npm
 
 RUN cd packages/Webkul/Shop \
-    && npm install --no-audit --no-fund \
-    && npm run build
+    && npm ci --omit=optional --no-audit --no-fund \
+    && npm run build \
+    && rm -rf node_modules .npm
 
 RUN cd packages/Webkul/Installer \
-    && npm install --no-audit --no-fund \
-    && npm run build
+    && npm ci --omit=optional --no-audit --no-fund \
+    && npm run build \
+    && rm -rf node_modules .npm
+
+RUN rm -rf /root/.npm /root/.cache /root/.npm
 
 
 FROM ubuntu:24.04
@@ -95,7 +100,8 @@ RUN mkdir -p \
         --prefer-dist \
         --optimize-autoloader \
         --no-scripts \
-    && rm -rf /root/.composer/cache
+    && rm -rf /root/.composer/cache \
+    && rm -rf /tmp/*
 
 COPY docker/production/php.ini /etc/php/${PHP_VERSION}/fpm/conf.d/99-production.ini
 COPY docker/production/php-fpm.conf /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf

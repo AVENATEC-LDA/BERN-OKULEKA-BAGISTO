@@ -72,6 +72,7 @@
                     <div class="icon-search pointer-events-none absolute top-2.5 flex items-center text-xl ltr:left-3 rtl:right-3"></div>
 
                     <input
+                        id="organic-search"
                         type="text"
                         name="query"
                         value="{{ request('query') }}"

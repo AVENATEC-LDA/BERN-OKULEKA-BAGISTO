@@ -25,9 +25,15 @@ class AppServiceProvider extends ServiceProvider
             return new \App\Services\OpenGraphService();
         });
 
-        $allowedIPs = array_map('trim', explode(',', config('app.debug_allowed_ips', '')));
+        $rawAllowed = config('app.debug_allowed_ips', '');
 
-        $allowedIPs = array_filter($allowedIPs);
+        if (is_array($rawAllowed)) {
+            $rawAllowed = implode(',', $rawAllowed);
+        }
+
+        $rawAllowed = $rawAllowed ?? '';
+
+        $allowedIPs = array_filter(array_map('trim', explode(',', (string) $rawAllowed)));
 
         if (empty($allowedIPs)) {
             return;

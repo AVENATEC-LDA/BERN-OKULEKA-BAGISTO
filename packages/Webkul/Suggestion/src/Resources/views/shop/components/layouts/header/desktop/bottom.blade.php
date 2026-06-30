@@ -608,7 +608,7 @@
                             role="search"
                         >
                             <label
-                                for="organic-search"
+                                for="organic-search-desktop"
                                 class="sr-only"
                             >
                                 @lang('shop::app.components.layouts.header.desktop.bottom.search')
@@ -618,6 +618,7 @@
                             </div>
 
                             <input
+                                id="organic-search-desktop"
                                 type="text"
                                 name="query"
                                 value="{{ request('query') }}"

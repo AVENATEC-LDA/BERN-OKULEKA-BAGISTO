@@ -558,7 +558,7 @@
                 class="mb-4 flex w-full items-center"
             >
                 <label
-                    for="organic-search"
+                    for="organic-search-mobile"
                     class="sr-only"
                 >
                     @lang('shop::app.components.layouts.header.mobile.search')
@@ -569,6 +569,7 @@
                     </div>
 
                     <input
+                        id="organic-search-mobile"
                         type="text"
                         name="query"
                         value="{{ request('query') }}"
